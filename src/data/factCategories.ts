@@ -1,13 +1,13 @@
 import { FactCategory, FactCategoryMeta } from '../models';
 
 export const FACT_CATEGORIES: Record<FactCategory, FactCategoryMeta> = {
-  music: { key: 'music', label: 'Музыка', emoji: '🎸' },
-  travel: { key: 'travel', label: 'Путешествия', emoji: '✈️' },
-  games: { key: 'games', label: 'Игры', emoji: '🎮' },
-  weird: { key: 'weird', label: 'Странное', emoji: '🌀' },
-  life: { key: 'life', label: 'Жизнь', emoji: '🌿' },
-  food: { key: 'food', label: 'Еда', emoji: '🍜' },
-  other: { key: 'other', label: 'Другое', emoji: '✨' },
+  music: { key: 'music', label: 'Музыка', icon: 'musical-notes-outline' },
+  travel: { key: 'travel', label: 'Путешествия', icon: 'airplane-outline' },
+  games: { key: 'games', label: 'Игры', icon: 'game-controller-outline' },
+  weird: { key: 'weird', label: 'Странное', icon: 'planet-outline' },
+  life: { key: 'life', label: 'Жизнь', icon: 'leaf-outline' },
+  food: { key: 'food', label: 'Еда', icon: 'restaurant-outline' },
+  other: { key: 'other', label: 'Другое', icon: 'ellipsis-horizontal' },
 };
 
 // Facts-feed filter chips (spec §16) — deliberately excludes "Другое".

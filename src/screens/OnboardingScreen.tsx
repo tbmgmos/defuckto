@@ -6,6 +6,7 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/types';
 import { colors, spacing, typography } from '../theme';
 import { Button } from '../components/Button';
+import { CoinGlyph } from '../components/CoinGlyph';
 import { useOnboardingStore } from '../stores/useOnboardingStore';
 import { STARTER_BALANCE } from '../services/localDatabase';
 
@@ -117,7 +118,9 @@ function WelcomeSplash() {
         <Text style={styles.welcomeTitle}>Добро пожаловать в DEFUCKTO.</Text>
         <Text style={styles.welcomeSubtitle}>Здесь люди немного интереснее своих фотографий.</Text>
         <View style={styles.welcomeCoin}>
-          <Text style={styles.welcomeCoinText}>+{STARTER_BALANCE} 🪙</Text>
+          <Text style={styles.welcomeCoinText}>
+            +{STARTER_BALANCE} <CoinGlyph size={15} color={colors.accentText} />
+          </Text>
         </View>
       </Animated.View>
     </View>

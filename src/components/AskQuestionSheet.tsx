@@ -48,7 +48,7 @@ export function AskQuestionSheet({ visible, onClose, onSend, loading, freeRemain
               ? 'Отправляем…'
               : freeRemaining > 0
                 ? `Отправить бесплатно · ещё ${freeRemaining} сегодня`
-                : `Отправить · ${QUESTION_PRICE} 🪙`
+                : `Отправить · ${QUESTION_PRICE}`
           }
           onPress={handleSend}
           size="lg"

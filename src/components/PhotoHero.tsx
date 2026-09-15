@@ -37,8 +37,8 @@ export function PhotoHero({ seed, name, height, borderRadius = radius.xl, childr
 
   return (
     <View style={[{ height, borderRadius, overflow: 'hidden' }, style]}>
-      <LinearGradient colors={gradient} start={{ x: 0.15, y: 0 }} end={{ x: 0.9, y: 1 }} style={StyleSheet.absoluteFill}>
-        <Text style={[styles.watermark, { fontSize: height * 0.8, lineHeight: height * 0.85 }]}>{initial}</Text>
+      <LinearGradient colors={gradient} start={{ x: 0.1, y: 0 }} end={{ x: 0.7, y: 1 }} style={StyleSheet.absoluteFill}>
+        <Text style={[styles.watermark, { fontSize: height * 0.56, lineHeight: height * 0.6 }]}>{initial}</Text>
       </LinearGradient>
       <LinearGradient
         colors={['rgba(10,10,11,0)', 'rgba(10,10,11,0.75)']}
@@ -54,10 +54,10 @@ export function PhotoHero({ seed, name, height, borderRadius = radius.xl, childr
 const styles = StyleSheet.create({
   watermark: {
     position: 'absolute',
-    right: -8,
-    bottom: -18,
-    color: 'rgba(255,255,255,0.14)',
-    fontWeight: '900',
+    right: -4,
+    bottom: -10,
+    color: 'rgba(255,255,255,0.10)',
+    fontWeight: '800',
   },
   overlay: {
     position: 'absolute',

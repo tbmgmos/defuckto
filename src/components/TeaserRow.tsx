@@ -21,7 +21,7 @@ export function TeaserRow({ teaser, onReveal, onOpenProfile, revealing }: Teaser
   const body = (
     <>
       <View style={styles.textRow}>
-        <Text style={styles.emoji}>👀</Text>
+        <Ionicons name="eye-outline" size={18} color={colors.textSecondary} style={styles.icon} />
         <View style={styles.textCol}>
           <Text style={typography.body}>
             {teaser.revealed ? `${curious?.name ?? 'Кто-то'} заинтересовал(ась) твоим фактом` : 'Кто-то заинтересовался твоим фактом'}
@@ -32,7 +32,7 @@ export function TeaserRow({ teaser, onReveal, onOpenProfile, revealing }: Teaser
       </View>
       {!teaser.revealed ? (
         <Button
-          label={revealing ? 'Узнаём…' : `Узнать · ${REVEAL_INTEREST_PRICE} 🪙`}
+          label={revealing ? 'Узнаём…' : `Узнать · ${REVEAL_INTEREST_PRICE}`}
           onPress={onReveal}
           variant="secondary"
           size="md"
@@ -77,8 +77,8 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     gap: spacing.sm,
   },
-  emoji: {
-    fontSize: 20,
+  icon: {
+    marginTop: 2,
   },
   textCol: {
     flex: 1,

@@ -1,6 +1,7 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import Slider from '@react-native-community/slider';
+import { Ionicons } from '@expo/vector-icons';
 import { BottomSheet } from './BottomSheet';
 import { Button } from './Button';
 import { Chip } from './Chip';
@@ -81,7 +82,7 @@ export function FilterSheet({
           <Chip
             key={i.key}
             label={i.label}
-            emoji={i.emoji}
+            icon={i.icon as React.ComponentProps<typeof Ionicons>['name']}
             selected={filters.interests.includes(i.key)}
             onPress={() => onToggleInterest(i.key)}
           />

@@ -60,7 +60,7 @@ export function GuessGameScreen({ navigation }: Props) {
 
   const resultLabel = useMemo(() => {
     if (!picked || !round) return null;
-    return picked === round.correctId ? 'Точно! 🎯' : 'Не в этот раз.';
+    return picked === round.correctId ? 'Точно!' : 'Не в этот раз.';
   }, [picked, round]);
 
   return (
@@ -75,7 +75,12 @@ export function GuessGameScreen({ navigation }: Props) {
 
       <View style={styles.scoreRow}>
         <Text style={styles.scoreText}>Счёт: {score}</Text>
-        {streak > 1 ? <Text style={styles.streakText}>🔥 серия {streak}</Text> : null}
+        {streak > 1 ? (
+          <View style={styles.streakRow}>
+            <Ionicons name="flame" size={16} color={colors.accentText} />
+            <Text style={styles.streakText}>серия {streak}</Text>
+          </View>
+        ) : null}
       </View>
 
       {round ? (
@@ -151,6 +156,11 @@ const styles = StyleSheet.create({
   },
   scoreText: {
     ...typography.bodyMedium,
+  },
+  streakRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
   },
   streakText: {
     ...typography.bodyMedium,

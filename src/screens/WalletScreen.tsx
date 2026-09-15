@@ -6,6 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { RootStackParamList } from '../navigation/types';
 import { CoinBalance } from '../components/CoinBalance';
 import { Button } from '../components/Button';
+import { CoinGlyph } from '../components/CoinGlyph';
 import { useWalletStore } from '../stores/useWalletStore';
 import { useToastStore } from '../stores/useToastStore';
 import { colors, radius, spacing, touchTarget, typography } from '../theme';
@@ -14,10 +15,10 @@ import { Transaction } from '../models';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Wallet'>;
 
-const EARN_IDEAS = [
-  { emoji: '✍️', title: 'Добавить факт', detail: '+20 🪙' },
-  { emoji: '🔓', title: 'Кто-то открыл твой факт', detail: '+70%' },
-  { emoji: '📅', title: 'Ежедневная активность', detail: '+…' },
+const EARN_IDEAS: { icon: React.ComponentProps<typeof Ionicons>['name']; title: string; detail: string }[] = [
+  { icon: 'create-outline', title: 'Добавить факт', detail: '+20' },
+  { icon: 'lock-open-outline', title: 'Кто-то открыл твой факт', detail: '+70%' },
+  { icon: 'calendar-outline', title: 'Ежедневная активность', detail: '+…' },
 ];
 
 export function WalletScreen({ navigation }: Props) {
@@ -52,7 +53,7 @@ export function WalletScreen({ navigation }: Props) {
             <Text style={typography.eyebrow}>Как заработать</Text>
             {EARN_IDEAS.map((idea) => (
               <View key={idea.title} style={styles.earnRow}>
-                <Text style={styles.earnEmoji}>{idea.emoji}</Text>
+                <Ionicons name={idea.icon} size={18} color={colors.textSecondary} />
                 <Text style={[typography.body, styles.earnTitle]}>{idea.title}</Text>
                 <Text style={styles.earnDetail}>{idea.detail}</Text>
               </View>
@@ -87,7 +88,7 @@ function TransactionRow({ tx }: { tx: Transaction }) {
       </View>
       <Text style={[styles.txAmount, positive ? styles.txAmountPositive : styles.txAmountNegative]}>
         {positive ? '+' : ''}
-        {tx.amount} 🪙
+        {tx.amount} <CoinGlyph size={12} color={positive ? colors.success : colors.textSecondary} />
       </Text>
     </View>
   );
@@ -180,9 +181,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
     padding: spacing.md,
-  },
-  earnEmoji: {
-    fontSize: 18,
   },
   earnTitle: {
     flex: 1,

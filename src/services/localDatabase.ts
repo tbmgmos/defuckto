@@ -6,6 +6,7 @@
 // bodies of services/*.ts, not touching any screen or store.
 
 import {
+  AppNotification,
   Block,
   Conversation,
   Fact,
@@ -47,6 +48,7 @@ export const db = {
   reports: [] as Report[],
   blocks: [] as Block[],
   teasers: [] as InterestTeaser[],
+  notifications: [] as AppNotification[],
   referrals: new Map<string, ReferralInfo>(),
   isPremium: new Map<string, boolean>(),
   // Resets when `date` no longer matches today — see economyService's free-question quota.
@@ -122,6 +124,24 @@ db.teasers.push(
     factId: 'f_vlad_3',
     createdAt: isoHoursAgo(30),
     revealed: false,
+  },
+);
+
+// A little seeded history so the notification bell isn't empty on first launch.
+db.notifications.push(
+  {
+    id: createId('notif'),
+    icon: 'lock-open-outline',
+    title: 'Маша открыла твой факт · +17',
+    createdAt: isoHoursAgo(20),
+    read: true,
+  },
+  {
+    id: createId('notif'),
+    icon: 'eye-outline',
+    title: 'Кто-то заинтересовался твоим фактом',
+    createdAt: isoHoursAgo(5),
+    read: false,
   },
 );
 

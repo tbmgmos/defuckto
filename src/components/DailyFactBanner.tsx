@@ -26,11 +26,11 @@ export function DailyFactBanner({ fact, author }: DailyFactBannerProps) {
   return (
     <>
       <Pressable onPress={() => setOpen(true)} style={styles.container} accessibilityRole="button">
-        <Text style={styles.emoji}>☀️</Text>
+        <Ionicons name="sunny-outline" size={20} color={colors.textSecondary} />
         <View style={styles.textCol}>
           <Text style={styles.eyebrow}>Факт дня · бесплатно</Text>
           <Text style={styles.preview} numberOfLines={1}>
-            {category.emoji} {author.name}: {fact.text}
+            {author.name}: {fact.text}
           </Text>
         </View>
         <Ionicons name="chevron-forward" size={18} color={colors.textTertiary} />
@@ -38,9 +38,10 @@ export function DailyFactBanner({ fact, author }: DailyFactBannerProps) {
 
       <BottomSheet visible={open} onClose={() => setOpen(false)} accessibilityLabel="Факт дня">
         <Text style={[typography.eyebrow]}>Факт дня</Text>
-        <Text style={[typography.title2, styles.sheetAuthor]}>
-          {category.emoji} {author.name}
-        </Text>
+        <View style={styles.sheetAuthorRow}>
+          <Ionicons name={category.icon as React.ComponentProps<typeof Ionicons>['name']} size={16} color={colors.textSecondary} />
+          <Text style={[typography.title2, styles.sheetAuthor]}>{author.name}</Text>
+        </View>
         <Text style={[typography.body, styles.sheetText]}>{fact.text}</Text>
         <Button label="Поделиться" onPress={share} size="lg" fullWidth style={styles.shareButton} />
         <Button label="Закрыть" onPress={() => setOpen(false)} variant="ghost" size="lg" fullWidth />
@@ -55,15 +56,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: spacing.sm,
     marginHorizontal: spacing.lg,
-    marginBottom: spacing.md,
-    backgroundColor: colors.accentMuted,
+    marginBottom: spacing.lg,
+    backgroundColor: colors.surface,
     borderRadius: radius.lg,
     borderWidth: 1,
-    borderColor: colors.accent,
+    borderColor: colors.border,
     padding: spacing.md,
-  },
-  emoji: {
-    fontSize: 22,
   },
   textCol: {
     flex: 1,
@@ -77,10 +75,14 @@ const styles = StyleSheet.create({
     ...typography.subhead,
     color: colors.textPrimary,
   },
-  sheetAuthor: {
+  sheetAuthorRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
     marginTop: spacing.xs,
     marginBottom: spacing.sm,
   },
+  sheetAuthor: {},
   sheetText: {
     marginBottom: spacing.lg,
   },

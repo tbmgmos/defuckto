@@ -33,16 +33,18 @@ export const colors = {
   overlaySoft: 'rgba(10, 10, 11, 0.4)',
   sheetHandle: '#3A3A3E',
 
-  // Avatar gradient pairs (deterministic, picked by user id)
+  // Avatar gradient pairs (deterministic, picked by user id) — muted tonal
+  // family, not a rainbow. Each is a near-neutral with a whisper of hue so
+  // people stay visually distinct without competing with the flame accent.
   avatarGradients: [
-    ['#FF4A32', '#B02A6B'],
-    ['#5B4CFF', '#1B1B3A'],
-    ['#0FA36B', '#0A2A2A'],
-    ['#F5B942', '#7A3B1E'],
-    ['#3D8BFF', '#12123A'],
-    ['#E0457B', '#3A1030'],
-    ['#2DBFA0', '#0B2C2C'],
-    ['#C6592D', '#2A1610'],
+    ['#3A3F47', '#15161A'],
+    ['#463930', '#17120F'],
+    ['#37402F', '#121510'],
+    ['#3E2F3B', '#141013'],
+    ['#2D3444', '#101219'],
+    ['#453329', '#17110D'],
+    ['#2B3E3B', '#0E1614'],
+    ['#3B3B3F', '#141416'],
   ] as const,
 } as const;
 

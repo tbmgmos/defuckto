@@ -11,6 +11,7 @@ export * from './statsService';
 export * from './moderationService';
 export * from './verificationService';
 export * from './notificationService';
+export * from './notificationsCenterService';
 export * from './streakService';
 export * from './referralService';
 export * from './teaserService';

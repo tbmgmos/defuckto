@@ -50,7 +50,7 @@ export function FactsFeedScreen({ navigation }: Props) {
     try {
       const outcome = await purchaseFact(purchaseTarget);
       setPurchaseTarget(null);
-      showToast(`Факт открыт · −${outcome.pricePaid} 🪙`, 'success');
+      showToast(`Факт открыт · −${outcome.pricePaid}`, 'success');
     } catch (e) {
       showToast(e instanceof Error ? e.message : 'Не получилось открыть факт', 'error');
     } finally {

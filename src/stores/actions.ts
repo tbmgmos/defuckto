@@ -19,6 +19,7 @@ import {
   REFERRAL_BONUS,
 } from '../services';
 import { getUserById, CURRENT_USER_ID } from '../data/users';
+import { dayWord } from '../utils/pluralize';
 import { useWalletStore } from './useWalletStore';
 import { useFactsStore } from './useFactsStore';
 import { usePhotosStore } from './usePhotosStore';
@@ -32,6 +33,7 @@ import { useStreakStore } from './useStreakStore';
 import { useTeasersStore } from './useTeasersStore';
 import { usePremiumStore } from './usePremiumStore';
 import { useSparkStore } from './useSparkStore';
+import { useNotificationsStore } from './useNotificationsStore';
 import { Fact, ProfilePhoto } from '../models';
 
 export async function bootstrapApp(): Promise<void> {
@@ -47,6 +49,7 @@ export async function bootstrapApp(): Promise<void> {
     useTeasersStore.getState().load(),
     usePremiumStore.getState().load(),
     useSparkStore.getState().load(),
+    useNotificationsStore.getState().load(),
   ]);
 }
 
@@ -54,7 +57,7 @@ export async function bootstrapApp(): Promise<void> {
 export async function sendSpark(userId: string): Promise<void> {
   await interestService.sendSpark(userId);
   useSparkStore.getState().markSparked(userId);
-  useToastStore.getState().show('✨ Отметил интерес', 'success');
+  useToastStore.getState().show('Отметил интерес', 'success');
 }
 
 /** Advances the daily streak at most once per day and surfaces the bonus, if any. */
@@ -64,7 +67,10 @@ async function touchDailyStreak(): Promise<void> {
   await walletService.earnCoins(CURRENT_USER_ID, bonus, 'Серия дней подряд', 'streak_bonus');
   await useWalletStore.getState().load();
   const streak = useStreakStore.getState().streak;
-  useToastStore.getState().show(`🔥 Серия ${streak?.currentStreak ?? ''} дней подряд · +${bonus} 🪙`, 'success');
+  const count = streak?.currentStreak ?? 0;
+  const message = `Серия ${count} ${dayWord(count)} подряд · +${bonus}`;
+  useToastStore.getState().show(message, 'success');
+  useNotificationsStore.getState().push('flame', message);
 }
 
 export async function exploreProfile(userId: string): Promise<void> {
@@ -89,7 +95,9 @@ function applyMutualInterestGrant(result: Awaited<ReturnType<typeof interestServ
   result.unlockedPhotoIds.forEach((id) => usePhotosStore.getState().markUnlocked(id));
   const grantedCount = result.unlockedFactIds.length + result.unlockedPhotoIds.length;
   if (grantedCount > 0) {
-    useToastStore.getState().show('✨ Взаимный интерес — весь остальной профиль открыт бесплатно', 'success');
+    const message = 'Взаимный интерес — весь остальной профиль открыт бесплатно';
+    useToastStore.getState().show(message, 'success');
+    useNotificationsStore.getState().push('sparkles', message);
   }
 }
 
@@ -189,13 +197,16 @@ export async function simulateIncomingActivity(): Promise<void> {
 
   if (result.kind === 'unlock') {
     await useWalletStore.getState().load();
-    const message = `+${result.amount} 🪙 · ${result.buyerName} открыл(а) твой факт`;
+    const message = `+${result.amount} · ${result.buyerName} открыл(а) твой факт`;
     useToastStore.getState().show(message, 'success');
+    useNotificationsStore.getState().push('lock-open-outline', message);
     await notificationService.notify('Твой факт открыли', message);
   } else {
     await useTeasersStore.getState().load();
-    useToastStore.getState().show('Кто-то заинтересовался твоим фактом 👀', 'default');
-    await notificationService.notify('DEFUCKTO', 'Кто-то заинтересовался твоим фактом 👀');
+    const message = 'Кто-то заинтересовался твоим фактом';
+    useToastStore.getState().show(message, 'default');
+    useNotificationsStore.getState().push('eye-outline', message);
+    await notificationService.notify('DEFUCKTO', message);
   }
 }
 
@@ -231,7 +242,9 @@ export async function redeemReferral(): Promise<void> {
   await referralService.simulateRedeem(CURRENT_USER_ID);
   await walletService.earnCoins(CURRENT_USER_ID, REFERRAL_BONUS, 'Друг присоединился по твоему коду', 'referral_bonus');
   await useWalletStore.getState().load();
-  useToastStore.getState().show(`+${REFERRAL_BONUS} 🪙 · Друг присоединился по твоему коду`, 'success');
+  const message = `+${REFERRAL_BONUS} · Друг присоединился по твоему коду`;
+  useToastStore.getState().show(message, 'success');
+  useNotificationsStore.getState().push('gift-outline', message);
 }
 
 export async function activatePremium(): Promise<void> {

@@ -7,6 +7,7 @@ import { colors, radius, spacing, typography } from '../theme';
 import { ReferralInfo } from '../models';
 import { REFERRAL_BONUS } from '../services/referralService';
 import { useToastStore } from '../stores/useToastStore';
+import { CoinGlyph } from './CoinGlyph';
 
 interface ReferralSheetProps {
   visible: boolean;
@@ -38,7 +39,8 @@ export function ReferralSheet({ visible, referral, onClose, onSimulateRedeem }: 
     <BottomSheet visible={visible} onClose={onClose} accessibilityLabel="Пригласить друга">
       <Text style={typography.title2}>Пригласи друга</Text>
       <Text style={[typography.body, styles.body]}>
-        Когда друг присоединится по твоему коду, вы оба получите по {REFERRAL_BONUS} 🪙.
+        Когда друг присоединится по твоему коду, вы оба получите по {REFERRAL_BONUS}{' '}
+        <CoinGlyph size={13} color={colors.textSecondary} />.
       </Text>
 
       {referral ? (
@@ -53,7 +55,7 @@ export function ReferralSheet({ visible, referral, onClose, onSimulateRedeem }: 
       </View>
 
       <Button
-        label={`Демо: друг присоединился (+${REFERRAL_BONUS} 🪙)`}
+        label={`Демо: друг присоединился (+${REFERRAL_BONUS})`}
         onPress={onSimulateRedeem}
         variant="ghost"
         size="lg"

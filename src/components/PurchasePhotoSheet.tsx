@@ -5,6 +5,7 @@ import { Button } from './Button';
 import { colors, spacing, typography } from '../theme';
 import { ProfilePhoto } from '../models';
 import { computeCurrentPrice } from '../services/economyService';
+import { CoinGlyph } from './CoinGlyph';
 
 interface PurchasePhotoSheetProps {
   visible: boolean;
@@ -20,10 +21,10 @@ export function PurchasePhotoSheet({ visible, photo, onClose, onConfirm, loading
     <BottomSheet visible={visible} onClose={onClose} accessibilityLabel="Открыть фото">
       <Text style={typography.title2}>Открыть фото?</Text>
       <Text style={[typography.body, styles.body]}>
-        С тебя {price} 🪙.{'\n'}Не всё видно на фото — иногда буквально.
+        С тебя {price} <CoinGlyph size={13} color={colors.textSecondary} />.{'\n'}Не всё видно на фото — иногда буквально.
       </Text>
       <Button
-        label={loading ? 'Открываем…' : `Открыть за ${price} 🪙`}
+        label={loading ? 'Открываем…' : `Открыть за ${price}`}
         onPress={onConfirm}
         size="lg"
         fullWidth

@@ -14,7 +14,7 @@ export type InterestKey =
 export interface Interest {
   key: InterestKey;
   label: string;
-  emoji: string;
+  icon: string; // Ionicons glyph name
 }
 
 export type FactCategory =
@@ -29,7 +29,7 @@ export type FactCategory =
 export interface FactCategoryMeta {
   key: FactCategory;
   label: string;
-  emoji: string;
+  icon: string; // Ionicons glyph name
 }
 
 // A moderation hook for later — never enforced in the demo, but every fact
@@ -203,6 +203,17 @@ export interface ReferralInfo {
   code: string;
   ownerId: string;
   invitesRedeemed: number;
+}
+
+// A persistent record of things that happened to the user (fact sold,
+// mutual interest, streak bonus…) — the notification bell's history, as
+// opposed to useToastStore's ephemeral 2.4s pop-up for the same events.
+export interface AppNotification {
+  id: string;
+  icon: string; // Ionicons glyph name
+  title: string;
+  createdAt: string;
+  read: boolean;
 }
 
 export interface DiscoveryFilters {

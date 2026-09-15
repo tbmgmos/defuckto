@@ -1,5 +1,6 @@
 import React from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { colors, radius, spacing, typography } from '../theme';
 import { Avatar } from './Avatar';
 import { CategoryStar } from '../services/leaderboardService';
@@ -27,9 +28,10 @@ export function WeeklyStars({ stars, onPressAuthor }: WeeklyStarsProps) {
           return (
             <Pressable key={star.category} onPress={() => onPressAuthor(author.id)} style={styles.card} accessibilityRole="button">
               <Avatar seed={author.photoSeed} name={author.name} size={44} />
-              <Text style={styles.categoryLabel}>
-                {category.emoji} {category.label}
-              </Text>
+              <View style={styles.categoryRow}>
+                <Ionicons name={category.icon as React.ComponentProps<typeof Ionicons>['name']} size={11} color={colors.textTertiary} />
+                <Text style={styles.categoryLabel}>{category.label}</Text>
+              </View>
               <Text style={styles.name} numberOfLines={1}>
                 {author.name}
               </Text>
@@ -64,11 +66,16 @@ const styles = StyleSheet.create({
     padding: spacing.sm,
     gap: 2,
   },
+  categoryRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    marginTop: spacing.xs,
+  },
   categoryLabel: {
     ...typography.caption,
     textTransform: 'none',
     letterSpacing: 0,
-    marginTop: spacing.xs,
   },
   name: {
     ...typography.bodyMedium,

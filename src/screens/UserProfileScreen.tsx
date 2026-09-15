@@ -85,7 +85,7 @@ export function UserProfileScreen({ route, navigation }: Props) {
     try {
       const outcome = await purchaseFact(purchaseTarget);
       setPurchaseTarget(null);
-      showToast(`Факт открыт · −${outcome.pricePaid} 🪙`, 'success');
+      showToast(`Факт открыт · −${outcome.pricePaid}`, 'success');
       setRevealFlow({ factId: outcome.fact.id, stage: 'revealed' });
     } catch (e) {
       showToast(e instanceof Error ? e.message : 'Не получилось открыть факт', 'error');
@@ -100,7 +100,7 @@ export function UserProfileScreen({ route, navigation }: Props) {
     try {
       const outcome = await purchasePhoto(photoTarget);
       setPhotoTarget(null);
-      showToast(`Фото открыто · −${outcome.pricePaid} 🪙`, 'success');
+      showToast(`Фото открыто · −${outcome.pricePaid}`, 'success');
     } catch (e) {
       showToast(e instanceof Error ? e.message : 'Не получилось открыть фото', 'error');
     } finally {
@@ -123,7 +123,7 @@ export function UserProfileScreen({ route, navigation }: Props) {
       setFreeQuestionsRemaining(outcome.freeQuestionsRemaining);
       const message = outcome.wasFree
         ? `Вопрос отправлен бесплатно · осталось ${outcome.freeQuestionsRemaining} сегодня`
-        : `Вопрос отправлен · −${outcome.pricePaid} 🪙 (дневной лимит бесплатных исчерпан)`;
+        : `Вопрос отправлен · −${outcome.pricePaid} (дневной лимит бесплатных исчерпан)`;
       showToast(message, 'success');
     } catch (e) {
       showToast(e instanceof Error ? e.message : 'Не получилось отправить вопрос', 'error');
@@ -209,10 +209,12 @@ export function UserProfileScreen({ route, navigation }: Props) {
                           <Text style={styles.reactionPrompt}>Ну и как?</Text>
                           <View style={styles.reactionButtons}>
                             <Pressable onPress={handleReact} style={styles.reactionButton} accessibilityRole="button" accessibilityLabel="Стоило того">
-                              <Text style={styles.reactionText}>👍 Стоило того</Text>
+                              <Ionicons name="thumbs-up-outline" size={14} color={colors.textPrimary} />
+                              <Text style={styles.reactionText}>Стоило того</Text>
                             </Pressable>
                             <Pressable onPress={handleReact} style={styles.reactionButton} accessibilityRole="button" accessibilityLabel="Не очень">
-                              <Text style={styles.reactionText}>👎 Не очень</Text>
+                              <Ionicons name="thumbs-down-outline" size={14} color={colors.textPrimary} />
+                              <Text style={styles.reactionText}>Не очень</Text>
                             </Pressable>
                           </View>
                         </>
@@ -352,6 +354,9 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   reactionButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
     backgroundColor: colors.surfaceAlt,
     borderRadius: 999,
     paddingHorizontal: spacing.md,

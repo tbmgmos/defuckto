@@ -1,10 +1,12 @@
 import React, { useEffect, useRef } from 'react';
 import { Animated, StyleSheet, Text, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { colors, radius, spacing, typography } from '../theme';
 import { FACT_CATEGORIES } from '../data/factCategories';
 import { Fact } from '../models';
 import { Button } from './Button';
 import { VoiceFactPlayer } from './VoiceFactPlayer';
+import { CoinGlyph } from './CoinGlyph';
 import { computeCurrentPrice } from '../services/economyService';
 
 interface FactCardProps {
@@ -34,14 +36,22 @@ export function FactCard({ fact, locked, onUnlock, unlocking }: FactCardProps) {
   return (
     <View style={[styles.container, locked && styles.containerLocked]}>
       <View style={styles.row}>
-        <Text style={styles.emoji}>{locked ? '🔒' : category.emoji}</Text>
+        <View style={styles.iconWrap}>
+          <Ionicons
+            name={locked ? 'lock-closed' : (category.icon as React.ComponentProps<typeof Ionicons>['name'])}
+            size={18}
+            color={locked ? colors.textTertiary : colors.textSecondary}
+          />
+        </View>
         <View style={styles.body}>
           {locked ? (
             <>
               <Text style={styles.lockedHint}>
                 {category.label} · закрытый {fact.type === 'voice' ? 'голосовой факт' : 'факт'}
               </Text>
-              <Text style={styles.priceLabel}>{price} 🪙</Text>
+              <Text style={styles.priceLabel}>
+                {price} <CoinGlyph size={13} color={colors.accentText} />
+              </Text>
               {fact.unlockCount > 0 ? (
                 <Text style={styles.socialProof}>{fact.unlockCount} человек уже узнали</Text>
               ) : null}
@@ -66,7 +76,7 @@ export function FactCard({ fact, locked, onUnlock, unlocking }: FactCardProps) {
       </View>
       {locked ? (
         <Button
-          label={unlocking ? 'Открываем…' : `Открыть за ${price} 🪙`}
+          label={unlocking ? 'Открываем…' : `Открыть за ${price}`}
           onPress={onUnlock}
           variant="secondary"
           disabled={unlocking}
@@ -95,8 +105,9 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
     alignItems: 'flex-start',
   },
-  emoji: {
-    fontSize: 22,
+  iconWrap: {
+    width: 22,
+    alignItems: 'center',
     marginTop: 2,
   },
   body: {

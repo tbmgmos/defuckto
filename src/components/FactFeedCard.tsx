@@ -1,5 +1,6 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { colors, radius, spacing, typography } from '../theme';
 import { FACT_CATEGORIES } from '../data/factCategories';
 import { Fact, User } from '../models';
@@ -8,6 +9,7 @@ import { Button } from './Button';
 import { Card } from './Card';
 import { VerifiedBadge } from './VerifiedBadge';
 import { VoiceFactPlayer } from './VoiceFactPlayer';
+import { CoinGlyph } from './CoinGlyph';
 import { computeCurrentPrice } from '../services/economyService';
 
 interface FactFeedCardProps {
@@ -28,11 +30,15 @@ export function FactFeedCard({ fact, author, locked, onOpenProfile, onUnlock, un
     <Card onPress={onOpenProfile} accessibilityLabel={`Профиль ${author.name}`}>
       <View style={styles.header}>
         <Avatar seed={author.photoSeed} name={author.name} size={36} />
-        <Text style={styles.author}>
-          {category.emoji} {author.name}
-        </Text>
+        <Ionicons name={category.icon as React.ComponentProps<typeof Ionicons>['name']} size={15} color={colors.textTertiary} />
+        <Text style={styles.author}>{author.name}</Text>
         {author.verified ? <VerifiedBadge /> : null}
-        {isVoice ? <Text style={styles.voiceTag}>🎙️ голос</Text> : null}
+        {isVoice ? (
+          <View style={styles.voiceTag}>
+            <Ionicons name="mic-outline" size={13} color={colors.textTertiary} />
+            <Text style={styles.voiceTagText}>голос</Text>
+          </View>
+        ) : null}
       </View>
 
       {!locked && isVoice && fact.audioUri ? (
@@ -46,7 +52,15 @@ export function FactFeedCard({ fact, author, locked, onOpenProfile, onUnlock, un
       )}
 
       <View style={styles.footer}>
-        <Text style={styles.price}>{locked ? `${price} 🪙` : 'Открыто'}</Text>
+        <Text style={styles.price}>
+          {locked ? (
+            <>
+              {price} <CoinGlyph size={13} color={colors.accentText} />
+            </>
+          ) : (
+            'Открыто'
+          )}
+        </Text>
         {locked ? (
           <Button
             label={unlocking ? 'Открываем…' : 'Открыть'}
@@ -77,12 +91,18 @@ const styles = StyleSheet.create({
   },
   author: {
     ...typography.bodyMedium,
+    flexShrink: 1,
   },
   voiceTag: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    marginLeft: 'auto',
+  },
+  voiceTagText: {
     ...typography.caption,
     textTransform: 'none',
     letterSpacing: 0,
-    marginLeft: 'auto',
   },
   voicePlayerWrap: {
     marginBottom: spacing.md,

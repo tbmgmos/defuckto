@@ -5,6 +5,7 @@ import { Button } from './Button';
 import { colors, spacing, typography } from '../theme';
 import { Fact } from '../models';
 import { computeCurrentPrice } from '../services/economyService';
+import { CoinGlyph } from './CoinGlyph';
 
 interface PurchaseFactSheetProps {
   visible: boolean;
@@ -20,10 +21,10 @@ export function PurchaseFactSheet({ visible, fact, onClose, onConfirm, loading }
     <BottomSheet visible={visible} onClose={onClose} accessibilityLabel="Открыть факт">
       <Text style={typography.title2}>Открыть факт?</Text>
       <Text style={[typography.body, styles.body]}>
-        С тебя {price} 🪙.{'\n'}Автор факта получит часть этой суммы.
+        С тебя {price} <CoinGlyph size={13} color={colors.textSecondary} />.{'\n'}Автор факта получит часть этой суммы.
       </Text>
       <Button
-        label={loading ? 'Открываем…' : `Открыть за ${price} 🪙`}
+        label={loading ? 'Открываем…' : `Открыть за ${price}`}
         onPress={onConfirm}
         size="lg"
         fullWidth

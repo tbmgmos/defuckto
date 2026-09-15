@@ -2,6 +2,7 @@ import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { colors, spacing, typography } from '../theme';
 import { CoinBalance } from './CoinBalance';
+import { NotificationsBell } from './NotificationsBell';
 import { useWalletStore } from '../stores/useWalletStore';
 
 interface ScreenHeaderProps {
@@ -22,6 +23,7 @@ export function ScreenHeader({ title, subtitle, onBalancePress, right }: ScreenH
       </View>
       <View style={styles.right}>
         {right}
+        <NotificationsBell />
         <CoinBalance balance={balance} onPress={onBalancePress} />
       </View>
     </View>

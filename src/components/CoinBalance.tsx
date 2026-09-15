@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Animated, Easing, Pressable, StyleSheet, Text, View } from 'react-native';
 import { colors, radius, spacing, typography } from '../theme';
+import { CoinGlyph } from './CoinGlyph';
 
 interface CoinBalanceProps {
   balance: number;
@@ -49,7 +50,7 @@ export function CoinBalance({ balance, onPress, size = 'md' }: CoinBalanceProps)
     >
       <Animated.View style={{ transform: [{ scale }], flexDirection: 'row', alignItems: 'center', gap: 6 }}>
         <Text style={[styles.value, size === 'sm' && styles.valueSm]}>{displayValue}</Text>
-        <Text style={size === 'sm' ? styles.coinSm : styles.coin}>🪙</Text>
+        <CoinGlyph size={size === 'sm' ? 11 : 13} />
       </Animated.View>
     </Container>
   );
@@ -81,11 +82,5 @@ const styles = StyleSheet.create({
     ...typography.subhead,
     color: colors.textPrimary,
     fontWeight: '700',
-  },
-  coin: {
-    fontSize: 16,
-  },
-  coinSm: {
-    fontSize: 13,
   },
 });

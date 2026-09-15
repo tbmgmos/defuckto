@@ -1,5 +1,6 @@
 import React from 'react';
 import { Pressable, StyleSheet, Text } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { colors, radius, spacing, typography, touchTarget } from '../theme';
 import { haptics } from '../utils/haptics';
 
@@ -7,10 +8,10 @@ interface ChipProps {
   label: string;
   selected?: boolean;
   onPress: () => void;
-  emoji?: string;
+  icon?: React.ComponentProps<typeof Ionicons>['name'];
 }
 
-export function Chip({ label, selected, onPress, emoji }: ChipProps) {
+export function Chip({ label, selected, onPress, icon }: ChipProps) {
   return (
     <Pressable
       onPress={() => {
@@ -22,7 +23,9 @@ export function Chip({ label, selected, onPress, emoji }: ChipProps) {
       hitSlop={4}
       style={[styles.base, selected && styles.selected]}
     >
-      {emoji ? <Text style={styles.emoji}>{emoji} </Text> : null}
+      {icon ? (
+        <Ionicons name={icon} size={15} color={selected ? colors.textInverse : colors.textSecondary} style={styles.icon} />
+      ) : null}
       <Text style={[styles.label, selected && styles.labelSelected]}>{label}</Text>
     </Pressable>
   );
@@ -44,8 +47,8 @@ const styles = StyleSheet.create({
     backgroundColor: colors.textPrimary,
     borderColor: colors.textPrimary,
   },
-  emoji: {
-    fontSize: 14,
+  icon: {
+    marginRight: 6,
   },
   label: {
     ...typography.subhead,

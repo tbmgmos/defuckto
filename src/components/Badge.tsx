@@ -1,5 +1,6 @@
 import React from 'react';
 import { StyleSheet, Text, View, ViewStyle } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { colors, radius, spacing, typography } from '../theme';
 
 type Tone = 'accent' | 'neutral' | 'success' | 'locked';
@@ -7,7 +8,7 @@ type Tone = 'accent' | 'neutral' | 'success' | 'locked';
 interface BadgeProps {
   label: string;
   tone?: Tone;
-  icon?: string;
+  icon?: React.ComponentProps<typeof Ionicons>['name'];
   style?: ViewStyle;
 }
 
@@ -22,7 +23,7 @@ export function Badge({ label, tone = 'neutral', icon, style }: BadgeProps) {
   const t = toneStyles[tone];
   return (
     <View style={[styles.container, { backgroundColor: t.bg }, style]}>
-      {icon ? <Text style={styles.icon}>{icon}</Text> : null}
+      {icon ? <Ionicons name={icon} size={13} color={t.text} /> : null}
       <Text style={[styles.label, { color: t.text }]}>{label}</Text>
     </View>
   );
@@ -37,9 +38,6 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     borderRadius: radius.pill,
     alignSelf: 'flex-start',
-  },
-  icon: {
-    fontSize: 13,
   },
   label: {
     ...typography.caption,

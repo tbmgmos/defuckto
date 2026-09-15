@@ -9,7 +9,6 @@ import { ScreenHeader } from '../components/ScreenHeader';
 import { Chip } from '../components/Chip';
 import { DiscoveryCard } from '../components/DiscoveryCard';
 import { DailyQuests } from '../components/DailyQuests';
-import { StreakBanner } from '../components/StreakBanner';
 import { DailyFactBanner } from '../components/DailyFactBanner';
 import { FilterSheet } from '../components/FilterSheet';
 import { useUsersStore } from '../stores/useUsersStore';
@@ -138,9 +137,8 @@ export function DiscoveryScreen({ navigation }: Props) {
                 </Pressable>
               }
             />
-            <StreakBanner streak={streak} />
             <DailyFactBanner fact={dailyFact} author={dailyFactAuthor} />
-            <DailyQuests quests={quests} />
+            <DailyQuests quests={quests} streak={streak} />
             <FlatList
               horizontal
               data={FILTERS as unknown as Filter[]}

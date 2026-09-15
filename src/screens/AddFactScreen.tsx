@@ -13,6 +13,7 @@ import { publishFact } from '../stores/actions';
 import { ADD_FACT_CATEGORY_LIST } from '../data/factCategories';
 import { colors, radius, spacing, touchTarget, typography } from '../theme';
 import { FactCategory, FactType } from '../models';
+import { CoinGlyph } from '../components/CoinGlyph';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'AddFact'>;
 
@@ -76,8 +77,8 @@ export function AddFactScreen({ navigation }: Props) {
 
         {Platform.OS !== 'web' ? (
           <View style={styles.typeChipsRow}>
-            <Chip label="Текст" emoji="✍️" selected={factType === 'text'} onPress={() => setFactType('text')} />
-            <Chip label="Голос" emoji="🎙️" selected={factType === 'voice'} onPress={() => setFactType('voice')} />
+            <Chip label="Текст" icon="create-outline" selected={factType === 'text'} onPress={() => setFactType('text')} />
+            <Chip label="Голос" icon="mic-outline" selected={factType === 'voice'} onPress={() => setFactType('voice')} />
           </View>
         ) : null}
 
@@ -104,24 +105,35 @@ export function AddFactScreen({ navigation }: Props) {
         <Text style={[typography.eyebrow, styles.sectionTitle]}>Категория</Text>
         <View style={styles.chipsRow}>
           {ADD_FACT_CATEGORY_LIST.map((c) => (
-            <Chip key={c.key} label={c.label} emoji={c.emoji} selected={category === c.key} onPress={() => setCategory(c.key)} />
+            <Chip
+              key={c.key}
+              label={c.label}
+              icon={c.icon as React.ComponentProps<typeof Ionicons>['name']}
+              selected={category === c.key}
+              onPress={() => setCategory(c.key)}
+            />
           ))}
         </View>
 
         <Text style={[typography.eyebrow, styles.sectionTitle]}>Стоимость открытия</Text>
         <View style={styles.chipsRow}>
           {PRICE_OPTIONS.map((p) => (
-            <Chip key={p} label={`${p} 🪙`} selected={price === p} onPress={() => setPrice(p)} />
+            <Chip key={p} label={String(p)} icon="ellipse" selected={price === p} onPress={() => setPrice(p)} />
           ))}
         </View>
 
         <Text style={[typography.eyebrow, styles.sectionTitle]}>Предпросмотр</Text>
         <View style={styles.previewCard}>
-          <Text style={styles.previewLabel}>🔒 Так твой факт увидят другие.</Text>
+          <View style={styles.previewLabelRow}>
+            <Ionicons name="lock-closed-outline" size={13} color={colors.textTertiary} />
+            <Text style={styles.previewLabel}>Так твой факт увидят другие.</Text>
+          </View>
           <Text style={[typography.body, styles.previewText]} numberOfLines={2}>
-            {isVoice ? '🎙️ Голосовой факт' : text.trim() ? maskPreview(text.trim()) : '•••• •••••••• •• •••••• ••••'}
+            {isVoice ? 'Голосовой факт' : text.trim() ? maskPreview(text.trim()) : '•••• •••••••• •• •••••• ••••'}
           </Text>
-          <Text style={styles.previewPrice}>{price} 🪙</Text>
+          <Text style={styles.previewPrice}>
+            {price} <CoinGlyph size={15} color={colors.accentText} />
+          </Text>
         </View>
       </ScrollView>
 
@@ -200,6 +212,11 @@ const styles = StyleSheet.create({
     borderRadius: radius.lg,
     padding: spacing.md,
     gap: spacing.xs,
+  },
+  previewLabelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
   },
   previewLabel: {
     ...typography.caption,

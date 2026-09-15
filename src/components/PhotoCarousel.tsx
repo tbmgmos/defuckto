@@ -3,6 +3,7 @@ import { FlatList, LayoutChangeEvent, Pressable, StyleSheet, Text, View } from '
 import { Ionicons } from '@expo/vector-icons';
 import { colors, radius, spacing, typography } from '../theme';
 import { PhotoHero } from './PhotoHero';
+import { CoinGlyph } from './CoinGlyph';
 import { ProfilePhoto } from '../models';
 import { computeCurrentPrice } from '../services/economyService';
 
@@ -65,7 +66,13 @@ export function PhotoCarousel({ name, photos, unlockedIds, height, onUnlock, unl
                             accessibilityLabel={`Открыть фото за ${price} монет`}
                           >
                             <Text style={styles.unlockButtonText}>
-                              {unlockingId === item.id ? 'Открываем…' : `Открыть за ${price} 🪙`}
+                              {unlockingId === item.id ? (
+                                'Открываем…'
+                              ) : (
+                                <>
+                                  Открыть за {price} <CoinGlyph size={13} color={colors.textInverse} />
+                                </>
+                              )}
                             </Text>
                           </Pressable>
                         </View>

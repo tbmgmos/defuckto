@@ -5,12 +5,14 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { CompositeScreenProps } from '@react-navigation/native';
 import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { Ionicons } from '@expo/vector-icons';
 import { RootStackParamList, TabParamList } from '../navigation/types';
 import { PhotoHero } from '../components/PhotoHero';
 import { Badge } from '../components/Badge';
 import { StatTile } from '../components/StatTile';
 import { Button } from '../components/Button';
 import { CoinBalance } from '../components/CoinBalance';
+import { CoinGlyph } from '../components/CoinGlyph';
 import { VerifiedBadge } from '../components/VerifiedBadge';
 import { VerificationSheet } from '../components/VerificationSheet';
 import { PaywallSheet } from '../components/PaywallSheet';
@@ -95,7 +97,13 @@ export function MyProfileScreen({ navigation }: Props) {
 
         <View style={styles.actionsRow}>
           {!currentUser.verified ? (
-            <Button label="✓ Верифицировать" onPress={() => setVerifySheetOpen(true)} variant="secondary" size="md" />
+            <Button
+              label="Верифицировать"
+              onPress={() => setVerifySheetOpen(true)}
+              variant="secondary"
+              size="md"
+              icon={<Ionicons name="checkmark-circle-outline" size={17} color={colors.textPrimary} />}
+            />
           ) : null}
           <Button label="DEFUCKTO+" onPress={() => setPaywallOpen(true)} variant={isPremium ? 'secondary' : 'primary'} size="md" />
           <Button label="Пригласить друга" onPress={() => setReferralOpen(true)} variant="secondary" size="md" />
@@ -117,17 +125,34 @@ export function MyProfileScreen({ navigation }: Props) {
           {myFacts.map((fact) => {
             const meta = FACT_CATEGORIES[fact.category];
             const price = computeCurrentPrice(fact.price, fact.unlockCount);
+            const rowIcon =
+              fact.price === 0
+                ? (meta.icon as React.ComponentProps<typeof Ionicons>['name'])
+                : fact.type === 'voice'
+                  ? 'mic-outline'
+                  : 'lock-closed-outline';
             return (
               <View key={fact.id} style={styles.factRow}>
-                <Text style={styles.factEmoji}>{fact.price === 0 ? meta.emoji : fact.type === 'voice' ? '🎙️' : '🔒'}</Text>
+                <Ionicons name={rowIcon} size={18} color={colors.textSecondary} />
                 <Text style={[typography.body, styles.factText]}>{fact.text}</Text>
-                {fact.price > 0 ? <Text style={styles.factPrice}>{price} 🪙</Text> : null}
+                {fact.price > 0 ? (
+                  <Text style={styles.factPrice}>
+                    {price} <CoinGlyph size={12} color={colors.accentText} />
+                  </Text>
+                ) : null}
               </View>
             );
           })}
         </View>
 
-        <Button label="+ Добавить факт" onPress={() => navigation.navigate('AddFact')} variant="secondary" fullWidth style={styles.addButton} />
+        <Button
+          label="Добавить факт"
+          onPress={() => navigation.navigate('AddFact')}
+          variant="secondary"
+          fullWidth
+          style={styles.addButton}
+          icon={<Ionicons name="add" size={19} color={colors.textPrimary} />}
+        />
       </View>
 
       <VerificationSheet
@@ -218,9 +243,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
     padding: spacing.md,
-  },
-  factEmoji: {
-    fontSize: 20,
   },
   factText: {
     flex: 1,

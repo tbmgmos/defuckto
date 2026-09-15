@@ -2,6 +2,7 @@ import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { Ionicons } from '@expo/vector-icons';
 import { BottomSheet } from './BottomSheet';
 import { Button } from './Button';
 import { colors, spacing, typography } from '../theme';
@@ -27,13 +28,15 @@ export function MutualInterestOverlay() {
     const conversation = await chatService.openConversation(CURRENT_USER_ID, event.otherUserId);
     useChatStore.getState().upsertConversation(conversation);
     dismiss();
-    navigation.navigate('Chat', { conversationId: conversation.id, draft: 'Привет! Мне стало любопытно 👀' });
+    navigation.navigate('Chat', { conversationId: conversation.id, draft: 'Привет! Мне стало любопытно.' });
   };
 
   return (
     <BottomSheet visible={!!event} onClose={dismiss} accessibilityLabel="Похоже, тебе интересно">
       <View style={styles.content}>
-        <Text style={styles.sparkle}>✨</Text>
+        <View style={styles.sparkleWrap}>
+          <Ionicons name="sparkles" size={26} color={colors.accentText} />
+        </View>
         <Text style={[typography.title2, styles.title]}>
           Похоже, тебе правда интересно{otherUser ? ` — ${otherUser.name}` : ' этому человеку'}.
         </Text>
@@ -50,9 +53,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: spacing.sm,
   },
-  sparkle: {
-    fontSize: 36,
-    marginBottom: spacing.sm,
+  sparkleWrap: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    backgroundColor: colors.accentMuted,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: spacing.md,
   },
   title: {
     textAlign: 'center',
