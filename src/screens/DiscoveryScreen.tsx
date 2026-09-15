@@ -19,6 +19,7 @@ import { useModerationStore } from '../stores/useModerationStore';
 import { useStreakStore } from '../stores/useStreakStore';
 import { useFiltersStore } from '../stores/useFiltersStore';
 import { useSparkStore } from '../stores/useSparkStore';
+import { useToastStore } from '../stores/useToastStore';
 import { DISCOVERY_META } from '../data/discoveryMeta';
 import { dailyFactService } from '../services/dailyFactService';
 import { compatibilityScore } from '../utils/compatibility';
@@ -49,6 +50,7 @@ export function DiscoveryScreen({ navigation }: Props) {
   const setCity = useFiltersStore((s) => s.setCity);
   const toggleInterest = useFiltersStore((s) => s.toggleInterest);
   const resetFilters = useFiltersStore((s) => s.reset);
+  const showToast = useToastStore((s) => s.show);
 
   const [filter, setFilter] = useState<Filter>('Для тебя');
   const [filterSheetOpen, setFilterSheetOpen] = useState(false);
@@ -57,6 +59,14 @@ export function DiscoveryScreen({ navigation }: Props) {
   useEffect(() => {
     dailyFactService.getFactOfTheDay().then((f) => setDailyFact(f ?? null));
   }, []);
+
+  const handleSpark = async (userId: string) => {
+    try {
+      await sendSpark(userId);
+    } catch (e) {
+      showToast(e instanceof Error ? e.message : 'Не получилось отметить интерес', 'error');
+    }
+  };
 
   useFocusEffect(
     useCallback(() => {
@@ -150,7 +160,7 @@ export function DiscoveryScreen({ navigation }: Props) {
             sharedInterests={currentUser ? compatibilityScore(currentUser, item) : 0}
             sparked={sparkedIds.has(item.id)}
             onPress={() => navigation.navigate('UserProfile', { userId: item.id })}
-            onSpark={() => sendSpark(item.id)}
+            onSpark={() => handleSpark(item.id)}
           />
         )}
         contentContainerStyle={styles.listContent}

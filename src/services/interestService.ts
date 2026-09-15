@@ -2,10 +2,30 @@ import { MutualInterestEvent } from '../models';
 import { db, delay } from './localDatabase';
 import { economyService } from './economyService';
 import { createId } from '../utils/id';
-import { isoNow } from '../utils/date';
+import { isoNow, localDayKey } from '../utils/date';
 import { CURRENT_USER_ID } from '../data/users';
 
 const MUTUAL_INTEREST_THRESHOLD = 2;
+
+// Generous, but not unlimited — free-and-uncapped would make it rational to
+// spark everyone in the feed, which drains the signal of any meaning.
+export const FREE_SPARKS_PER_DAY = 15;
+
+function sparkUsageToday(userId: string): number {
+  const usage = db.dailySparkUsage.get(userId);
+  if (!usage || usage.date !== localDayKey()) return 0;
+  return usage.count;
+}
+
+function consumeSparkQuota(userId: string): void {
+  const today = localDayKey();
+  const usage = db.dailySparkUsage.get(userId);
+  if (!usage || usage.date !== today) {
+    db.dailySparkUsage.set(userId, { date: today, count: 1 });
+  } else {
+    usage.count += 1;
+  }
+}
 
 export interface MutualInterestResult {
   event: MutualInterestEvent;
@@ -56,13 +76,27 @@ export const interestService = {
    * chat by itself; it just raises this person's odds of "getting curious
    * about you" in simulationService, so genuine (if lightweight) interest
    * has some real effect instead of being a pure dead end.
+   *
+   * Capped at FREE_SPARKS_PER_DAY — free-and-uncapped isn't the same thing
+   * as meaningful, see the constant's comment above.
    */
   async sendSpark(otherUserId: string): Promise<void> {
+    if (db.sparkedUserIds.has(otherUserId)) return delay(undefined, 0); // idempotent, already sparked
+
+    if (sparkUsageToday(CURRENT_USER_ID) >= FREE_SPARKS_PER_DAY) {
+      throw new Error(`Дневной лимит искр исчерпан (${FREE_SPARKS_PER_DAY}/день) — вернись завтра`);
+    }
+
+    consumeSparkQuota(CURRENT_USER_ID);
     db.sparkedUserIds.add(otherUserId);
     return delay(undefined, 0);
   },
 
   async getSparkedIds(): Promise<Set<string>> {
     return delay(new Set(db.sparkedUserIds), 0);
+  },
+
+  async sparksRemainingToday(): Promise<number> {
+    return delay(Math.max(0, FREE_SPARKS_PER_DAY - sparkUsageToday(CURRENT_USER_ID)), 0);
   },
 };

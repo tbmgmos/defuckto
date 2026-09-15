@@ -20,7 +20,7 @@ export const REVEAL_INTEREST_PRICE = 12;
 // scam "знакомства" sites use to bleed users message by message, and we
 // don't want to look like that. Past the quota it reverts to a paid "extra
 // question", not a hard wall.
-export const FREE_QUESTIONS_PER_DAY = 3;
+export const FREE_QUESTIONS_PER_DAY = 5;
 
 function sellerCut(price: number): number {
   return Math.round(price * SELLER_SHARE);

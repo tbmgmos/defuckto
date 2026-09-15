@@ -54,6 +54,9 @@ export const db = {
   // Free, money-free "I'm interested" signal (see interestService.sendSpark) — feeds
   // simulationService's weighting, distinct from paid unlocks/questions.
   sparkedUserIds: new Set<string>(),
+  // Resets daily like dailyQuestionUsage — caps sparks so "free and unlimited"
+  // doesn't turn into "spark everyone" and dilute the signal to nothing.
+  dailySparkUsage: new Map<string, { date: string; count: number }>(),
 };
 
 // Seed wallets — the current user gets the spec'd starter balance, every
