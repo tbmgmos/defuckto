@@ -157,6 +157,18 @@ export async function askQuestion(fact: Fact, questionText: string): Promise<Ask
   return { wasFree: result.wasFree, pricePaid: result.pricePaid, freeQuestionsRemaining: result.freeQuestionsRemaining };
 }
 
+/**
+ * Opens (or finds) a conversation with someone directly — no fact unlock
+ * required first. Writing to a person shouldn't be gated behind buying
+ * their content; that's what makes the paid stuff feel like a toll booth
+ * instead of a nice-to-have.
+ */
+export async function openConversationWith(otherUserId: string): Promise<string> {
+  const conversation = await chatService.openConversation(CURRENT_USER_ID, otherUserId);
+  useChatStore.getState().upsertConversation(conversation);
+  return conversation.id;
+}
+
 export async function publishFact(input: CreateFactInput): Promise<Fact> {
   const fact = await factService.createFact(input);
   useFactsStore.getState().addFact(fact);

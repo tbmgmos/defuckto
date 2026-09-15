@@ -7,6 +7,7 @@ import { RootStackParamList } from '../navigation/types';
 import { colors, spacing, typography } from '../theme';
 import { PhotoCarousel } from '../components/PhotoCarousel';
 import { FactCard } from '../components/FactCard';
+import { Button } from '../components/Button';
 import { PurchaseFactSheet } from '../components/PurchaseFactSheet';
 import { PurchasePhotoSheet } from '../components/PurchasePhotoSheet';
 import { AskQuestionSheet } from '../components/AskQuestionSheet';
@@ -19,7 +20,7 @@ import { useFactsStore } from '../stores/useFactsStore';
 import { usePhotosStore } from '../stores/usePhotosStore';
 import { useUsersStore } from '../stores/useUsersStore';
 import { useToastStore } from '../stores/useToastStore';
-import { askQuestion, blockUser, exploreProfile, purchaseFact, purchasePhoto, reportFact, reportUser } from '../stores/actions';
+import { askQuestion, blockUser, exploreProfile, openConversationWith, purchaseFact, purchasePhoto, reportFact, reportUser } from '../stores/actions';
 import { interestLabel } from '../data/interests';
 import { compatibilityScore } from '../utils/compatibility';
 import { Fact, ProfilePhoto } from '../models';
@@ -131,6 +132,11 @@ export function UserProfileScreen({ route, navigation }: Props) {
     }
   };
 
+  const handleWrite = async () => {
+    const conversationId = await openConversationWith(userId);
+    navigation.navigate('Chat', { conversationId });
+  };
+
   const handleReportFact = async (reason: string) => {
     const target = sortedFacts[0];
     if (!target) return;
@@ -180,6 +186,8 @@ export function UserProfileScreen({ route, navigation }: Props) {
             ))}
           </View>
           <Text style={[typography.body, styles.bio]}>{user.bio}</Text>
+
+          <Button label="Написать" onPress={handleWrite} variant="secondary" size="md" style={styles.writeButton} />
 
           <Text style={[typography.eyebrow, styles.sectionTitle]}>Факты</Text>
           <View style={styles.factsList}>
@@ -312,6 +320,10 @@ const styles = StyleSheet.create({
   bio: {
     marginTop: spacing.md,
     color: colors.textSecondary,
+  },
+  writeButton: {
+    marginTop: spacing.md,
+    alignSelf: 'flex-start',
   },
   sectionTitle: {
     marginTop: spacing.xl,
