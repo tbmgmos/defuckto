@@ -12,15 +12,47 @@ import { useChatStore } from '../stores/useChatStore';
 import { useTeasersStore } from '../stores/useTeasersStore';
 import { useToastStore } from '../stores/useToastStore';
 import { revealTeaser } from '../stores/actions';
+import { chatService } from '../services';
 import { getOtherParticipant } from '../data/conversations';
 import { getUserById, CURRENT_USER_ID } from '../data/users';
 import { colors, spacing, typography } from '../theme';
 import { formatRelativeTime } from '../utils/date';
+import { Conversation } from '../models';
 
 type Props = CompositeScreenProps<
   BottomTabScreenProps<TabParamList, 'Messages'>,
   NativeStackScreenProps<RootStackParamList>
 >;
+
+interface ConversationRowProps {
+  conversation: Conversation;
+  onPress: () => void;
+}
+
+function ConversationRow({ conversation, onPress }: ConversationRowProps) {
+  const otherId = getOtherParticipant(conversation, CURRENT_USER_ID);
+  const other = getUserById(otherId);
+  if (!other) return null;
+  const lastMessage = conversation.messages[conversation.messages.length - 1];
+  return (
+    <View style={styles.cardWrap}>
+      <Card onPress={onPress} accessibilityLabel={`Диалог с ${other.name}`}>
+        <View style={styles.row}>
+          <Avatar seed={other.photoSeed} name={other.name} size={52} />
+          <View style={styles.textCol}>
+            <View style={styles.topRow}>
+              <Text style={typography.headline}>{other.name}</Text>
+              {lastMessage ? <Text style={styles.time}>{formatRelativeTime(lastMessage.createdAt)}</Text> : null}
+            </View>
+            <Text style={[typography.subhead, styles.preview]} numberOfLines={1}>
+              {lastMessage ? lastMessage.text : 'Начните разговор'}
+            </Text>
+          </View>
+        </View>
+      </Card>
+    </View>
+  );
+}
 
 export function MessagesListScreen({ navigation }: Props) {
   const conversations = useChatStore((s) => s.conversations);
@@ -28,11 +60,14 @@ export function MessagesListScreen({ navigation }: Props) {
   const showToast = useToastStore((s) => s.show);
   const [revealingId, setRevealingId] = useState<string | null>(null);
 
+  const requests = conversations.filter((c) => chatService.isPendingRequest(c, CURRENT_USER_ID));
+  const regular = conversations.filter((c) => !chatService.isPendingRequest(c, CURRENT_USER_ID));
+
   const handleReveal = async (teaserId: string) => {
     setRevealingId(teaserId);
     try {
       const name = await revealTeaser(teaserId);
-      showToast(`Это ${name} 👀`, 'success');
+      showToast(`Это ${name}`, 'success');
     } catch (e) {
       showToast(e instanceof Error ? e.message : 'Не получилось', 'error');
     } finally {
@@ -40,17 +75,19 @@ export function MessagesListScreen({ navigation }: Props) {
     }
   };
 
+  const openChat = (conversationId: string) => navigation.navigate('Chat', { conversationId });
+
   return (
     <View style={styles.root}>
       <FlatList
-        data={conversations}
+        data={regular}
         keyExtractor={(item) => item.id}
         ListHeaderComponent={
           <>
             <ScreenHeader title="Сообщения" onBalancePress={() => navigation.navigate('Wallet')} />
             {teasers.length > 0 ? (
-              <View style={styles.teasersSection}>
-                <Text style={[typography.eyebrow, styles.teasersTitle]}>Кто-то заинтересовался</Text>
+              <View style={styles.section}>
+                <Text style={[typography.eyebrow, styles.sectionTitle]}>Кто-то заинтересовался</Text>
                 {teasers.map((t) => (
                   <TeaserRow
                     key={t.id}
@@ -62,37 +99,26 @@ export function MessagesListScreen({ navigation }: Props) {
                 ))}
               </View>
             ) : null}
+            {requests.length > 0 ? (
+              <View style={styles.section}>
+                <Text style={[typography.eyebrow, styles.sectionTitle]}>Запросы</Text>
+                <Text style={styles.sectionHint}>Ответь, чтобы начать общение</Text>
+                {requests.map((c) => (
+                  <ConversationRow key={c.id} conversation={c} onPress={() => openChat(c.id)} />
+                ))}
+              </View>
+            ) : null}
+            {requests.length > 0 && regular.length > 0 ? (
+              <Text style={[typography.eyebrow, styles.sectionTitle, styles.dialogsTitle]}>Диалоги</Text>
+            ) : null}
           </>
         }
         contentContainerStyle={styles.listContent}
-        renderItem={({ item }) => {
-          const otherId = getOtherParticipant(item, CURRENT_USER_ID);
-          const other = getUserById(otherId);
-          if (!other) return null;
-          const lastMessage = item.messages[item.messages.length - 1];
-          return (
-            <View style={styles.cardWrap}>
-              <Card onPress={() => navigation.navigate('Chat', { conversationId: item.id })} accessibilityLabel={`Диалог с ${other.name}`}>
-                <View style={styles.row}>
-                  <Avatar seed={other.photoSeed} name={other.name} size={52} />
-                  <View style={styles.textCol}>
-                    <View style={styles.topRow}>
-                      <Text style={typography.headline}>{other.name}</Text>
-                      {lastMessage ? (
-                        <Text style={styles.time}>{formatRelativeTime(lastMessage.createdAt)}</Text>
-                      ) : null}
-                    </View>
-                    <Text style={[typography.subhead, styles.preview]} numberOfLines={1}>
-                      {lastMessage ? lastMessage.text : 'Начните разговор'}
-                    </Text>
-                  </View>
-                </View>
-              </Card>
-            </View>
-          );
-        }}
+        renderItem={({ item }) => <ConversationRow conversation={item} onPress={() => openChat(item.id)} />}
         ListEmptyComponent={
-          <Text style={[typography.subhead, styles.empty]}>Пока нет диалогов. Открой чей-то факт, чтобы начать.</Text>
+          requests.length === 0 ? (
+            <Text style={[typography.subhead, styles.empty]}>Пока нет диалогов. Открой чей-то факт, чтобы начать.</Text>
+          ) : null
         }
         showsVerticalScrollIndicator={false}
       />
@@ -107,12 +133,23 @@ const styles = StyleSheet.create({
   listContent: {
     paddingBottom: spacing.xxxl,
   },
-  teasersSection: {
+  section: {
     paddingHorizontal: spacing.lg,
     marginBottom: spacing.md,
   },
-  teasersTitle: {
+  sectionTitle: {
     marginBottom: spacing.sm,
+  },
+  sectionHint: {
+    ...typography.caption,
+    textTransform: 'none',
+    letterSpacing: 0,
+    color: colors.textTertiary,
+    marginTop: -spacing.xs,
+    marginBottom: spacing.sm,
+  },
+  dialogsTitle: {
+    paddingHorizontal: spacing.lg,
   },
   cardWrap: {
     paddingHorizontal: spacing.lg,

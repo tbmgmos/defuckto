@@ -15,6 +15,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { RootStackParamList } from '../navigation/types';
 import { Avatar } from '../components/Avatar';
 import { useChatStore } from '../stores/useChatStore';
+import { useToastStore } from '../stores/useToastStore';
 import { sendChatMessage } from '../stores/actions';
 import { getOtherParticipant } from '../data/conversations';
 import { getUserById, CURRENT_USER_ID } from '../data/users';
@@ -28,6 +29,7 @@ export function ChatScreen({ route, navigation }: Props) {
   const { conversationId, draft: initialDraft } = route.params;
   const insets = useSafeAreaInsets();
   const conversation = useChatStore((s) => s.conversations.find((c) => c.id === conversationId));
+  const showToast = useToastStore((s) => s.show);
   const [draft, setDraft] = useState(initialDraft ?? '');
   const listRef = useRef<FlatList<Message>>(null);
 
@@ -46,8 +48,13 @@ export function ChatScreen({ route, navigation }: Props) {
     const text = draft.trim();
     if (!text) return;
     setDraft('');
-    await sendChatMessage(conversationId, text);
-    requestAnimationFrame(() => listRef.current?.scrollToEnd({ animated: true }));
+    try {
+      await sendChatMessage(conversationId, text);
+      requestAnimationFrame(() => listRef.current?.scrollToEnd({ animated: true }));
+    } catch (e) {
+      setDraft(text);
+      showToast(e instanceof Error ? e.message : 'Не получилось отправить сообщение', 'error');
+    }
   };
 
   return (
