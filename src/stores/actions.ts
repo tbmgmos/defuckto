@@ -231,6 +231,12 @@ export async function removeProfilePhoto(): Promise<void> {
   useToastStore.getState().show('Фото удалено', 'default');
 }
 
+export async function updateBio(bio: string): Promise<void> {
+  await userService.updateBio(CURRENT_USER_ID, bio);
+  useUsersStore.getState().setBio(bio);
+  useToastStore.getState().show('Изменения сохранены', 'success');
+}
+
 export async function submitVerification(): Promise<void> {
   await verificationService.submitVerification(CURRENT_USER_ID);
   useUsersStore.getState().setVerified(true);

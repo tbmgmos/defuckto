@@ -19,13 +19,14 @@ import { VerificationSheet } from '../components/VerificationSheet';
 import { PaywallSheet } from '../components/PaywallSheet';
 import { ReferralSheet } from '../components/ReferralSheet';
 import { PhotoPickerSheet } from '../components/PhotoPickerSheet';
+import { EditBioSheet } from '../components/EditBioSheet';
 import { useUsersStore } from '../stores/useUsersStore';
 import { useFactsStore } from '../stores/useFactsStore';
 import { useWalletStore } from '../stores/useWalletStore';
 import { usePremiumStore } from '../stores/usePremiumStore';
 import { statsService, ProfileStats } from '../services/statsService';
 import { referralService } from '../services/referralService';
-import { submitVerification, redeemReferral, activatePremium, updateProfilePhoto, removeProfilePhoto } from '../stores/actions';
+import { submitVerification, redeemReferral, activatePremium, updateProfilePhoto, removeProfilePhoto, updateBio } from '../stores/actions';
 import { interestLabel } from '../data/interests';
 import { FACT_CATEGORIES } from '../data/factCategories';
 import { CURRENT_USER_ID } from '../data/users';
@@ -51,6 +52,7 @@ export function MyProfileScreen({ navigation }: Props) {
   const [paywallOpen, setPaywallOpen] = useState(false);
   const [referralOpen, setReferralOpen] = useState(false);
   const [photoPickerOpen, setPhotoPickerOpen] = useState(false);
+  const [bioSheetOpen, setBioSheetOpen] = useState(false);
 
   const pickPhotoFromCamera = useCallback(async () => {
     const permission = await ImagePicker.requestCameraPermissionsAsync();
@@ -137,7 +139,15 @@ export function MyProfileScreen({ navigation }: Props) {
             <Badge key={i} label={interestLabel(i)} tone="neutral" />
           ))}
         </View>
-        <Text style={[typography.body, styles.bio]}>{currentUser.bio}</Text>
+        <Pressable
+          style={styles.bioRow}
+          onPress={() => setBioSheetOpen(true)}
+          accessibilityRole="button"
+          accessibilityLabel="Редактировать о себе"
+        >
+          <Text style={[typography.body, styles.bio]}>{currentUser.bio}</Text>
+          <Ionicons name="pencil-outline" size={15} color={colors.textTertiary} style={styles.bioIcon} />
+        </Pressable>
 
         <View style={styles.actionsRow}>
           {!currentUser.verified ? (
@@ -224,6 +234,12 @@ export function MyProfileScreen({ navigation }: Props) {
         onPickLibrary={pickPhotoFromLibrary}
         onRemove={removeProfilePhoto}
       />
+      <EditBioSheet
+        visible={bioSheetOpen}
+        initialValue={currentUser.bio}
+        onClose={() => setBioSheetOpen(false)}
+        onSave={updateBio}
+      />
     </ScrollView>
   );
 }
@@ -273,9 +289,18 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
     marginTop: spacing.sm,
   },
-  bio: {
+  bioRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: spacing.xs,
     marginTop: spacing.md,
+  },
+  bio: {
+    flex: 1,
     color: colors.textSecondary,
+  },
+  bioIcon: {
+    marginTop: 3,
   },
   actionsRow: {
     flexDirection: 'row',
