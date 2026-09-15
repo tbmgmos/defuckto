@@ -1,0 +1,133 @@
+import React, { useMemo, useState } from 'react';
+import { FlatList, StyleSheet, Text, View } from 'react-native';
+import { CompositeScreenProps } from '@react-navigation/native';
+import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
+import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { RootStackParamList, TabParamList } from '../navigation/types';
+import { ScreenHeader } from '../components/ScreenHeader';
+import { Chip } from '../components/Chip';
+import { FactFeedCard } from '../components/FactFeedCard';
+import { PurchaseFactSheet } from '../components/PurchaseFactSheet';
+import { useFactsStore } from '../stores/useFactsStore';
+import { useToastStore } from '../stores/useToastStore';
+import { purchaseFact } from '../stores/actions';
+import { getUserById, CURRENT_USER_ID } from '../data/users';
+import { FACT_CATEGORY_LIST } from '../data/factCategories';
+import { colors, spacing, typography } from '../theme';
+import { Fact, FactCategory } from '../models';
+
+type Props = CompositeScreenProps<
+  BottomTabScreenProps<TabParamList, 'FactsFeed'>,
+  NativeStackScreenProps<RootStackParamList>
+>;
+
+type CategoryFilter = 'all' | FactCategory;
+
+export function FactsFeedScreen({ navigation }: Props) {
+  const allFacts = useFactsStore((s) => s.facts);
+  const unlockedIds = useFactsStore((s) => s.unlockedIds);
+  const showToast = useToastStore((s) => s.show);
+  const [category, setCategory] = useState<CategoryFilter>('all');
+  const [purchaseTarget, setPurchaseTarget] = useState<Fact | null>(null);
+  const [purchasing, setPurchasing] = useState(false);
+
+  const filtered = useMemo(() => {
+    const eligible = allFacts.filter((f) => f.authorId !== CURRENT_USER_ID && f.price > 0);
+    return category === 'all' ? eligible : eligible.filter((f) => f.category === category);
+  }, [allFacts, category]);
+
+  const handleConfirmPurchase = async () => {
+    if (!purchaseTarget) return;
+    setPurchasing(true);
+    try {
+      const outcome = await purchaseFact(purchaseTarget);
+      setPurchaseTarget(null);
+      showToast(`Факт открыт · −${outcome.fact.price} 🪙`, 'success');
+    } catch (e) {
+      showToast(e instanceof Error ? e.message : 'Не получилось открыть факт', 'error');
+    } finally {
+      setPurchasing(false);
+    }
+  };
+
+  return (
+    <View style={styles.root}>
+      <FlatList
+        data={filtered}
+        keyExtractor={(item) => item.id}
+        ListHeaderComponent={
+          <>
+            <ScreenHeader title="Интересное" subtitle="Люди рассказали о себе то, чего не увидишь в профиле." onBalancePress={() => navigation.navigate('Wallet')} />
+            <FlatList
+              horizontal
+              data={[{ key: 'all', label: 'Все' }, ...FACT_CATEGORY_LIST.map((c) => ({ key: c.key, label: c.label }))]}
+              keyExtractor={(item) => item.key}
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.filters}
+              renderItem={({ item }) => (
+                <Chip
+                  label={item.label}
+                  selected={category === item.key}
+                  onPress={() => setCategory(item.key as CategoryFilter)}
+                />
+              )}
+            />
+          </>
+        }
+        renderItem={({ item }) => {
+          const author = getUserById(item.authorId);
+          if (!author) return null;
+          const locked = !unlockedIds.has(item.id);
+          return (
+            <View style={styles.cardWrap}>
+              <FactFeedCard
+                fact={item}
+                author={author}
+                locked={locked}
+                unlocking={purchasing && purchaseTarget?.id === item.id}
+                onOpenProfile={() => navigation.navigate('UserProfile', { userId: author.id })}
+                onUnlock={() => setPurchaseTarget(item)}
+              />
+            </View>
+          );
+        }}
+        contentContainerStyle={styles.listContent}
+        showsVerticalScrollIndicator={false}
+        ListEmptyComponent={
+          <Text style={[typography.subhead, styles.empty]}>В этой категории пока пусто.</Text>
+        }
+      />
+
+      <PurchaseFactSheet
+        visible={!!purchaseTarget}
+        fact={purchaseTarget}
+        onClose={() => setPurchaseTarget(null)}
+        onConfirm={handleConfirmPurchase}
+        loading={purchasing}
+      />
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  root: {
+    flex: 1,
+  },
+  filters: {
+    paddingHorizontal: spacing.lg,
+    gap: spacing.xs,
+    paddingBottom: spacing.lg,
+  },
+  cardWrap: {
+    paddingHorizontal: spacing.lg,
+    marginBottom: spacing.md,
+  },
+  listContent: {
+    paddingBottom: spacing.xxxl,
+  },
+  empty: {
+    textAlign: 'center',
+    marginTop: spacing.xxl,
+    color: colors.textTertiary,
+  },
+});
