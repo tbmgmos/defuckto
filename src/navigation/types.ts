@@ -11,7 +11,7 @@ export type RootStackParamList = {
   Onboarding: undefined;
   MainTabs: NavigatorScreenParams<TabParamList>;
   UserProfile: { userId: string };
-  Chat: { conversationId: string };
+  Chat: { conversationId: string; draft?: string };
   AddFact: undefined;
   Wallet: undefined;
   GuessGame: undefined;

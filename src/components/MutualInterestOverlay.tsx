@@ -21,21 +21,24 @@ export function MutualInterestOverlay() {
 
   const startChat = async () => {
     if (!event) return;
-    // A friendly opener from the other person, so the chat isn't empty
-    // when the user arrives.
-    const conversation = await chatService.sendMessageTo(CURRENT_USER_ID, event.otherUserId, 'Привет! Мне стало любопытно 👀');
+    // Just opens (or finds) the conversation — no fabricated message from
+    // the other side. The starter line goes into *your* composer as a
+    // suggestion, not a fake reply that was never actually sent by them.
+    const conversation = await chatService.openConversation(CURRENT_USER_ID, event.otherUserId);
     useChatStore.getState().upsertConversation(conversation);
     dismiss();
-    navigation.navigate('Chat', { conversationId: conversation.id });
+    navigation.navigate('Chat', { conversationId: conversation.id, draft: 'Привет! Мне стало любопытно 👀' });
   };
 
   return (
-    <BottomSheet visible={!!event} onClose={dismiss} accessibilityLabel="Взаимный интерес">
+    <BottomSheet visible={!!event} onClose={dismiss} accessibilityLabel="Похоже, тебе интересно">
       <View style={styles.content}>
         <Text style={styles.sparkle}>✨</Text>
-        <Text style={[typography.title2, styles.title]}>Кажется, вы заинтересовали друг друга.</Text>
-        <Text style={styles.subtitle}>Взаимный интерес{otherUser ? ` · ${otherUser.name}` : ''}</Text>
-        <Button label="Начать общение" onPress={startChat} size="lg" fullWidth style={styles.cta} />
+        <Text style={[typography.title2, styles.title]}>
+          Похоже, тебе правда интересно{otherUser ? ` — ${otherUser.name}` : ' этому человеку'}.
+        </Text>
+        <Text style={styles.subtitle}>Хочешь написать первым?</Text>
+        <Button label="Написать первым" onPress={startChat} size="lg" fullWidth style={styles.cta} />
         <Button label="Позже" onPress={dismiss} variant="ghost" size="lg" fullWidth />
       </View>
     </BottomSheet>

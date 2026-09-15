@@ -1,5 +1,6 @@
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { colors, spacing, typography } from '../theme';
 import { User } from '../models';
 import { PhotoHero } from './PhotoHero';
@@ -12,10 +13,12 @@ interface DiscoveryCardProps {
   user: User;
   unlockedFactsCount: number;
   sharedInterests: number;
+  sparked: boolean;
   onPress: () => void;
+  onSpark: () => void;
 }
 
-export function DiscoveryCard({ user, unlockedFactsCount, sharedInterests, onPress }: DiscoveryCardProps) {
+export function DiscoveryCard({ user, unlockedFactsCount, sharedInterests, sparked, onPress, onSpark }: DiscoveryCardProps) {
   return (
     <View style={styles.container}>
       <PhotoHero seed={user.photoSeed} name={user.name} height={420}>
@@ -33,7 +36,19 @@ export function DiscoveryCard({ user, unlockedFactsCount, sharedInterests, onPre
           ) : null}
           <CompatibilityTag sharedCount={sharedInterests} />
         </View>
-        <Button label="Исследовать профиль" onPress={onPress} size="lg" fullWidth style={styles.cta} />
+        <View style={styles.ctaRow}>
+          <Button label="Исследовать профиль" onPress={onPress} size="lg" style={styles.exploreCta} />
+          <Pressable
+            onPress={onSpark}
+            disabled={sparked}
+            style={[styles.sparkButton, sparked && styles.sparkButtonActive]}
+            accessibilityRole="button"
+            accessibilityLabel={sparked ? 'Интерес уже отмечен' : 'Мне интересно'}
+            hitSlop={8}
+          >
+            <Ionicons name={sparked ? 'sparkles' : 'sparkles-outline'} size={22} color={sparked ? colors.accent : colors.textPrimary} />
+          </Pressable>
+        </View>
       </PhotoHero>
     </View>
   );
@@ -74,7 +89,26 @@ const styles = StyleSheet.create({
     textTransform: 'none',
     letterSpacing: 0,
   },
-  cta: {
+  ctaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
     marginTop: spacing.md,
+  },
+  exploreCta: {
+    flex: 1,
+  },
+  sparkButton: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.surfaceAlt,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  sparkButtonActive: {
+    borderColor: colors.accent,
   },
 });

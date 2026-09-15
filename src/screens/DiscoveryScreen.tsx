@@ -18,12 +18,14 @@ import { useQuestsStore } from '../stores/useQuestsStore';
 import { useModerationStore } from '../stores/useModerationStore';
 import { useStreakStore } from '../stores/useStreakStore';
 import { useFiltersStore } from '../stores/useFiltersStore';
+import { useSparkStore } from '../stores/useSparkStore';
 import { DISCOVERY_META } from '../data/discoveryMeta';
 import { dailyFactService } from '../services/dailyFactService';
 import { compatibilityScore } from '../utils/compatibility';
 import { colors, spacing, touchTarget } from '../theme';
 import { Fact, User } from '../models';
 import { getUserById } from '../data/users';
+import { sendSpark } from '../stores/actions';
 
 type Props = CompositeScreenProps<
   BottomTabScreenProps<TabParamList, 'Discovery'>,
@@ -42,6 +44,7 @@ export function DiscoveryScreen({ navigation }: Props) {
   const blockedIds = useModerationStore((s) => s.blockedIds);
   const streak = useStreakStore((s) => s.streak);
   const filters = useFiltersStore((s) => s.filters);
+  const sparkedIds = useSparkStore((s) => s.sparkedIds);
   const setAgeRange = useFiltersStore((s) => s.setAgeRange);
   const setCity = useFiltersStore((s) => s.setCity);
   const toggleInterest = useFiltersStore((s) => s.toggleInterest);
@@ -145,7 +148,9 @@ export function DiscoveryScreen({ navigation }: Props) {
             user={item}
             unlockedFactsCount={unlockedCountByAuthor.get(item.id) ?? 0}
             sharedInterests={currentUser ? compatibilityScore(currentUser, item) : 0}
+            sparked={sparkedIds.has(item.id)}
             onPress={() => navigation.navigate('UserProfile', { userId: item.id })}
+            onSpark={() => sendSpark(item.id)}
           />
         )}
         contentContainerStyle={styles.listContent}

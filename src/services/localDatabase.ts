@@ -51,6 +51,9 @@ export const db = {
   isPremium: new Map<string, boolean>(),
   // Resets when `date` no longer matches today — see economyService's free-question quota.
   dailyQuestionUsage: new Map<string, { date: string; count: number }>(),
+  // Free, money-free "I'm interested" signal (see interestService.sendSpark) — feeds
+  // simulationService's weighting, distinct from paid unlocks/questions.
+  sparkedUserIds: new Set<string>(),
 };
 
 // Seed wallets — the current user gets the spec'd starter balance, every

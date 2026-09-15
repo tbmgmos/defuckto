@@ -8,7 +8,35 @@ import { db, delay, SELLER_SHARE } from './localDatabase';
 import { walletService } from './walletService';
 import { teaserService } from './teaserService';
 import { computeCurrentPrice } from './economyService';
-import { CURRENT_USER_ID } from '../data/users';
+import { compatibilityScore } from '../utils/compatibility';
+import { CURRENT_USER_ID, getUserById } from '../data/users';
+import { User } from '../models';
+
+/**
+ * Who "gets curious about you" shouldn't be a coin flip untethered from
+ * anything you've done — that's exactly the kind of fabricated-signal
+ * pattern that erodes trust (see MutualInterestOverlay). Weighting it by
+ * shared interests, whether you've already engaged with them, and whether
+ * you sent them a free spark makes the simulation reflect something real
+ * instead of pure noise.
+ */
+function interestWeight(currentUser: User | undefined, candidate: User): number {
+  const shared = currentUser ? compatibilityScore(currentUser, candidate) : 0;
+  const alreadyEngaged = (db.interactionCounts.get(candidate.id) ?? 0) > 0;
+  const sparked = db.sparkedUserIds.has(candidate.id);
+  return 1 + shared * 2 + (alreadyEngaged ? 3 : 0) + (sparked ? 4 : 0);
+}
+
+function weightedPick(users: User[], weight: (u: User) => number): User {
+  const weights = users.map(weight);
+  const total = weights.reduce((sum, w) => sum + w, 0);
+  let roll = Math.random() * total;
+  for (let i = 0; i < users.length; i++) {
+    roll -= weights[i];
+    if (roll <= 0) return users[i];
+  }
+  return users[users.length - 1];
+}
 
 export interface SimulatedUnlock {
   kind: 'unlock';
@@ -30,7 +58,8 @@ export const simulationService = {
     if (myPaidFacts.length === 0) return delay(null, 0);
 
     const otherUsers = db.users.filter((u) => u.id !== CURRENT_USER_ID);
-    const buyer = otherUsers[Math.floor(Math.random() * otherUsers.length)];
+    const currentUser = getUserById(CURRENT_USER_ID);
+    const buyer = weightedPick(otherUsers, (u) => interestWeight(currentUser, u));
     const fact = myPaidFacts[Math.floor(Math.random() * myPaidFacts.length)];
 
     // 30% of the time: someone gets curious but hasn't paid yet — a teaser

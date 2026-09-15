@@ -21,6 +21,13 @@ function createConversation(userA: string, userB: string): Conversation {
 }
 
 export const chatService = {
+  /** Finds (or opens) the conversation between two users without sending anything — for flows that just need a place to write, not a fabricated first message. */
+  async openConversation(userA: string, userB: string): Promise<Conversation> {
+    const conversation = findConversation(userA, userB) ?? createConversation(userA, userB);
+    return delay(conversation, 0);
+  },
+
+
   async getConversationsForUser(userId: string): Promise<Conversation[]> {
     const list = db.conversations
       .filter((c) => c.participantIds.includes(userId))

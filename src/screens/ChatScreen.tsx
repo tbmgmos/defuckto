@@ -25,10 +25,10 @@ import { Message } from '../models';
 type Props = NativeStackScreenProps<RootStackParamList, 'Chat'>;
 
 export function ChatScreen({ route, navigation }: Props) {
-  const { conversationId } = route.params;
+  const { conversationId, draft: initialDraft } = route.params;
   const insets = useSafeAreaInsets();
   const conversation = useChatStore((s) => s.conversations.find((c) => c.id === conversationId));
-  const [draft, setDraft] = useState('');
+  const [draft, setDraft] = useState(initialDraft ?? '');
   const listRef = useRef<FlatList<Message>>(null);
 
   const otherId = conversation ? getOtherParticipant(conversation, CURRENT_USER_ID) : undefined;

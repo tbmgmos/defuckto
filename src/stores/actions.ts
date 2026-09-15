@@ -31,6 +31,7 @@ import { useModerationStore } from './useModerationStore';
 import { useStreakStore } from './useStreakStore';
 import { useTeasersStore } from './useTeasersStore';
 import { usePremiumStore } from './usePremiumStore';
+import { useSparkStore } from './useSparkStore';
 import { Fact, ProfilePhoto } from '../models';
 
 export async function bootstrapApp(): Promise<void> {
@@ -45,7 +46,15 @@ export async function bootstrapApp(): Promise<void> {
     useStreakStore.getState().load(),
     useTeasersStore.getState().load(),
     usePremiumStore.getState().load(),
+    useSparkStore.getState().load(),
   ]);
+}
+
+/** Free "I'm interested" signal — see interestService.sendSpark. */
+export async function sendSpark(userId: string): Promise<void> {
+  await interestService.sendSpark(userId);
+  useSparkStore.getState().markSparked(userId);
+  useToastStore.getState().show('✨ Отметил интерес', 'success');
 }
 
 /** Advances the daily streak at most once per day and surfaces the bonus, if any. */
