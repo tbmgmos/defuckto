@@ -23,6 +23,8 @@ import { askQuestion, blockUser, exploreProfile, purchaseFact, purchasePhoto, re
 import { interestLabel } from '../data/interests';
 import { compatibilityScore } from '../utils/compatibility';
 import { Fact, ProfilePhoto } from '../models';
+import { economyService } from '../services';
+import { CURRENT_USER_ID } from '../data/users';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'UserProfile'>;
 
@@ -47,6 +49,11 @@ export function UserProfileScreen({ route, navigation }: Props) {
   const [asking, setAsking] = useState(false);
   const [revealFlow, setRevealFlow] = useState<{ factId: string; stage: RevealStage } | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [freeQuestionsRemaining, setFreeQuestionsRemaining] = useState(0);
+
+  useEffect(() => {
+    economyService.freeQuestionsRemaining(CURRENT_USER_ID).then(setFreeQuestionsRemaining);
+  }, []);
 
   useEffect(() => {
     exploreProfile(userId);
@@ -109,10 +116,14 @@ export function UserProfileScreen({ route, navigation }: Props) {
     if (!questionTarget) return;
     setAsking(true);
     try {
-      await askQuestion(questionTarget, text);
+      const outcome = await askQuestion(questionTarget, text);
       setQuestionTarget(null);
       setRevealFlow(null);
-      showToast('Вопрос отправлен · −15 🪙', 'success');
+      setFreeQuestionsRemaining(outcome.freeQuestionsRemaining);
+      const message = outcome.wasFree
+        ? `Вопрос отправлен бесплатно · осталось ${outcome.freeQuestionsRemaining} сегодня`
+        : `Вопрос отправлен · −${outcome.pricePaid} 🪙 (дневной лимит бесплатных исчерпан)`;
+      showToast(message, 'success');
     } catch (e) {
       showToast(e instanceof Error ? e.message : 'Не получилось отправить вопрос', 'error');
     } finally {
@@ -232,6 +243,7 @@ export function UserProfileScreen({ route, navigation }: Props) {
         onClose={() => setQuestionTarget(null)}
         onSend={handleSendQuestion}
         loading={asking}
+        freeRemaining={freeQuestionsRemaining}
       />
 
       <ReportBlockSheet

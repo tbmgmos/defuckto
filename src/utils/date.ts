@@ -2,6 +2,11 @@ export function isoNow(): string {
   return new Date().toISOString();
 }
 
+/** yyyy-mm-dd, local-enough for a demo — used to reset daily quotas (free questions, streaks). */
+export function localDayKey(): string {
+  return new Date().toISOString().slice(0, 10);
+}
+
 export function isoMinutesAgo(minutes: number): string {
   return new Date(Date.now() - minutes * 60_000).toISOString();
 }

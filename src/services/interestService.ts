@@ -1,10 +1,17 @@
 import { MutualInterestEvent } from '../models';
 import { db, delay } from './localDatabase';
+import { economyService } from './economyService';
 import { createId } from '../utils/id';
 import { isoNow } from '../utils/date';
 import { CURRENT_USER_ID } from '../data/users';
 
 const MUTUAL_INTEREST_THRESHOLD = 2;
+
+export interface MutualInterestResult {
+  event: MutualInterestEvent;
+  unlockedFactIds: string[];
+  unlockedPhotoIds: string[];
+}
 
 export const interestService = {
   /**
@@ -13,8 +20,12 @@ export const interestService = {
    * exactly once per pair, once the interaction count crosses the
    * threshold — spec §15 wants this to feel like a rare small event, not
    * something that fires on every tap.
+   *
+   * Once it fires, it also grants free access to the rest of that person's
+   * paid facts/photos (see economyService.grantFullAccess) — sustained
+   * interest should be rewarded with openness, not more paywalls.
    */
-  async recordInteraction(otherUserId: string): Promise<MutualInterestEvent | null> {
+  async recordInteraction(otherUserId: string): Promise<MutualInterestResult | null> {
     const count = (db.interactionCounts.get(otherUserId) ?? 0) + 1;
     db.interactionCounts.set(otherUserId, count);
 
@@ -31,6 +42,9 @@ export const interestService = {
       seen: false,
     };
     db.mutualInterests.push(event);
-    return delay(event);
+
+    const { unlockedFactIds, unlockedPhotoIds } = await economyService.grantFullAccess(CURRENT_USER_ID, otherUserId);
+
+    return delay({ event, unlockedFactIds, unlockedPhotoIds });
   },
 };

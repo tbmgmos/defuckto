@@ -72,6 +72,18 @@ export interface PurchaseOutcome {
   mutualInterest: boolean;
 }
 
+/** Applies a mutual-interest result to the facts/photos stores and, if it granted anything, says so. */
+function applyMutualInterestGrant(result: Awaited<ReturnType<typeof interestService.recordInteraction>>): void {
+  if (!result) return;
+  useInterestStore.getState().show(result.event);
+  result.unlockedFactIds.forEach((id) => useFactsStore.getState().markUnlocked(id));
+  result.unlockedPhotoIds.forEach((id) => usePhotosStore.getState().markUnlocked(id));
+  const grantedCount = result.unlockedFactIds.length + result.unlockedPhotoIds.length;
+  if (grantedCount > 0) {
+    useToastStore.getState().show('✨ Взаимный интерес — весь остальной профиль открыт бесплатно', 'success');
+  }
+}
+
 export async function purchaseFact(fact: Fact): Promise<PurchaseOutcome> {
   const buyer = useUsersStore.getState().currentUser;
   const author = getUserById(fact.authorId);
@@ -86,7 +98,7 @@ export async function purchaseFact(fact: Fact): Promise<PurchaseOutcome> {
   await touchDailyStreak();
 
   const mutualEvent = await interestService.recordInteraction(fact.authorId);
-  if (mutualEvent) useInterestStore.getState().show(mutualEvent);
+  applyMutualInterestGrant(mutualEvent);
 
   return { fact: result.fact, sellerEarnings: result.sellerEarnings, pricePaid: result.pricePaid, mutualInterest: !!mutualEvent };
 }
@@ -111,7 +123,13 @@ export async function purchasePhoto(photo: ProfilePhoto): Promise<PurchasePhotoO
   return { photo: result.photo, pricePaid: result.pricePaid };
 }
 
-export async function askQuestion(fact: Fact, questionText: string): Promise<void> {
+export interface AskQuestionOutcome {
+  wasFree: boolean;
+  pricePaid: number;
+  freeQuestionsRemaining: number;
+}
+
+export async function askQuestion(fact: Fact, questionText: string): Promise<AskQuestionOutcome> {
   const buyer = useUsersStore.getState().currentUser;
   if (!buyer) throw new Error('Не удалось определить пользователя');
 
@@ -125,7 +143,9 @@ export async function askQuestion(fact: Fact, questionText: string): Promise<voi
   if (conversation) useChatStore.getState().upsertConversation(conversation);
 
   const mutualEvent = await interestService.recordInteraction(fact.authorId);
-  if (mutualEvent) useInterestStore.getState().show(mutualEvent);
+  applyMutualInterestGrant(mutualEvent);
+
+  return { wasFree: result.wasFree, pricePaid: result.pricePaid, freeQuestionsRemaining: result.freeQuestionsRemaining };
 }
 
 export async function publishFact(input: CreateFactInput): Promise<Fact> {

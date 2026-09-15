@@ -49,6 +49,8 @@ export const db = {
   teasers: [] as InterestTeaser[],
   referrals: new Map<string, ReferralInfo>(),
   isPremium: new Map<string, boolean>(),
+  // Resets when `date` no longer matches today — see economyService's free-question quota.
+  dailyQuestionUsage: new Map<string, { date: string; count: number }>(),
 };
 
 // Seed wallets — the current user gets the spec'd starter balance, every

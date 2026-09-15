@@ -10,9 +10,11 @@ interface AskQuestionSheetProps {
   onClose: () => void;
   onSend: (text: string) => void;
   loading?: boolean;
+  /** Free questions left today (see economyService.FREE_QUESTIONS_PER_DAY) — drives the button label. */
+  freeRemaining?: number;
 }
 
-export function AskQuestionSheet({ visible, onClose, onSend, loading }: AskQuestionSheetProps) {
+export function AskQuestionSheet({ visible, onClose, onSend, loading, freeRemaining = 0 }: AskQuestionSheetProps) {
   const [text, setText] = useState('');
 
   const handleClose = () => {
@@ -41,7 +43,13 @@ export function AskQuestionSheet({ visible, onClose, onSend, loading }: AskQuest
           accessibilityLabel="Текст вопроса"
         />
         <Button
-          label={loading ? 'Отправляем…' : `Отправить · ${QUESTION_PRICE} 🪙`}
+          label={
+            loading
+              ? 'Отправляем…'
+              : freeRemaining > 0
+                ? `Отправить бесплатно · ещё ${freeRemaining} сегодня`
+                : `Отправить · ${QUESTION_PRICE} 🪙`
+          }
           onPress={handleSend}
           size="lg"
           fullWidth

@@ -10,26 +10,50 @@ import { photoService } from './photoService';
 import { chatService } from './chatService';
 import { Fact, FactPurchase, PhotoPurchase, ProfilePhoto, TransactionType, Wallet } from '../models';
 import { createId } from '../utils/id';
-import { isoNow } from '../utils/date';
+import { isoNow, localDayKey } from '../utils/date';
 
 export const QUESTION_PRICE = 15;
 export const REVEAL_INTEREST_PRICE = 12;
+
+// Everyone gets a few questions a day for free — paying to unlock content is
+// one thing, paying just to be allowed to speak to someone is the pattern
+// scam "знакомства" sites use to bleed users message by message, and we
+// don't want to look like that. Past the quota it reverts to a paid "extra
+// question", not a hard wall.
+export const FREE_QUESTIONS_PER_DAY = 3;
 
 function sellerCut(price: number): number {
   return Math.round(price * SELLER_SHARE);
 }
 
 /**
- * The price actually charged grows with demand: every previous unlock adds
- * 8%, capped at +80% (10 unlocks). A brand-new fact/photo is cheap and gets
- * pricier as it proves itself — early buyers are rewarded, popular authors
- * earn more per sale over time, and "53 человека уже узнали" becomes a
- * price signal, not just a vanity number.
+ * The price actually charged grows with demand, but only a little: each of
+ * the first 4 unlocks adds 5%, capped at +20%. Previously this grew to +80%
+ * over 10 unlocks, which paid authors more for staying vague and racking up
+ * unlocks than for actually connecting with someone — the curve is kept
+ * mild on purpose so "popular content costs a bit more" stays a flavor
+ * signal, not the main incentive.
  */
 export function computeCurrentPrice(basePrice: number, unlockCount: number): number {
   if (basePrice <= 0) return 0;
-  const growth = 1 + Math.min(unlockCount, 10) * 0.08;
+  const growth = 1 + Math.min(unlockCount, 4) * 0.05;
   return Math.round(basePrice * growth);
+}
+
+function questionUsageToday(userId: string): number {
+  const usage = db.dailyQuestionUsage.get(userId);
+  if (!usage || usage.date !== localDayKey()) return 0;
+  return usage.count;
+}
+
+function consumeFreeQuestion(userId: string): void {
+  const today = localDayKey();
+  const usage = db.dailyQuestionUsage.get(userId);
+  if (!usage || usage.date !== today) {
+    db.dailyQuestionUsage.set(userId, { date: today, count: 1 });
+  } else {
+    usage.count += 1;
+  }
 }
 
 async function rewardOwner(sellerId: string, amount: number, description: string, type: TransactionType): Promise<Wallet> {
@@ -127,24 +151,95 @@ export const economyService = {
     return delay({ buyerWallet, sellerEarnings, pricePaid, purchase, photo: { ...photo } });
   },
 
-  async askQuestion(buyerId: string, factId: string, buyerName: string, questionText: string): Promise<{ wallet: Wallet; conversationId: string }> {
+  async freeQuestionsRemaining(userId: string): Promise<number> {
+    return delay(Math.max(0, FREE_QUESTIONS_PER_DAY - questionUsageToday(userId)), 0);
+  },
+
+  async askQuestion(
+    buyerId: string,
+    factId: string,
+    buyerName: string,
+    questionText: string,
+  ): Promise<{ wallet: Wallet; conversationId: string; wasFree: boolean; pricePaid: number; freeQuestionsRemaining: number }> {
     const fact = db.facts.find((f) => f.id === factId);
     if (!fact) throw new Error('Факт не найден');
     if (fact.authorId === buyerId) throw new Error('Нельзя задать вопрос самому себе');
 
-    const wallet = await walletService.spendCoins(
-      buyerId,
-      QUESTION_PRICE,
-      `Вопрос: ${fact.text.slice(0, 24)}${fact.text.length > 24 ? '…' : ''}`,
-      'question_sent',
-    );
+    const usedToday = questionUsageToday(buyerId);
+    const isFree = usedToday < FREE_QUESTIONS_PER_DAY;
 
-    const reward = sellerCut(QUESTION_PRICE);
-    await rewardOwner(fact.authorId, reward, `${buyerName} задал(а) тебе вопрос`, 'question_reward');
+    let wallet: Wallet;
+    if (isFree) {
+      consumeFreeQuestion(buyerId);
+      wallet = await walletService.getWallet(buyerId);
+    } else {
+      wallet = await walletService.spendCoins(
+        buyerId,
+        QUESTION_PRICE,
+        `Доп. вопрос сверх дневного лимита: ${fact.text.slice(0, 24)}${fact.text.length > 24 ? '…' : ''}`,
+        'question_sent',
+      );
+      const reward = sellerCut(QUESTION_PRICE);
+      await rewardOwner(fact.authorId, reward, `${buyerName} задал(а) тебе доп. вопрос`, 'question_reward');
+    }
 
     const conversation = await chatService.sendMessageTo(fact.authorId, buyerId, questionText);
 
-    return delay({ wallet, conversationId: conversation.id });
+    return delay({
+      wallet,
+      conversationId: conversation.id,
+      wasFree: isFree,
+      pricePaid: isFree ? 0 : QUESTION_PRICE,
+      freeQuestionsRemaining: Math.max(0, FREE_QUESTIONS_PER_DAY - questionUsageToday(buyerId)),
+    });
+  },
+
+  /**
+   * Rewards sustained genuine interest (see interestService's mutual-interest
+   * threshold) with free access to the rest of that author's paid facts/
+   * photos — once someone has shown real interest, the economy should stop
+   * charging them to keep learning about the same person. These are gifts,
+   * not sales: no coins move, and unlockCount (the demand signal behind
+   * computeCurrentPrice) is deliberately left untouched.
+   */
+  async grantFullAccess(buyerId: string, authorId: string): Promise<{ unlockedFactIds: string[]; unlockedPhotoIds: string[] }> {
+    const unlockedFactIds: string[] = [];
+    for (const fact of db.facts) {
+      if (fact.authorId !== authorId || fact.price === 0) continue;
+      const alreadyUnlocked = await factService.isUnlockedForUser(fact.id, buyerId);
+      if (alreadyUnlocked) continue;
+      const purchase: FactPurchase = {
+        id: createId('fp'),
+        factId: fact.id,
+        buyerId,
+        sellerId: authorId,
+        price: 0,
+        sellerEarnings: 0,
+        createdAt: isoNow(),
+      };
+      db.purchases.push(purchase);
+      unlockedFactIds.push(fact.id);
+    }
+
+    const unlockedPhotoIds: string[] = [];
+    for (const photo of db.photos) {
+      if (photo.ownerId !== authorId || photo.price === 0) continue;
+      const alreadyUnlocked = await photoService.isUnlockedForUser(photo.id, buyerId);
+      if (alreadyUnlocked) continue;
+      const purchase: PhotoPurchase = {
+        id: createId('pp'),
+        photoId: photo.id,
+        buyerId,
+        sellerId: authorId,
+        price: 0,
+        sellerEarnings: 0,
+        createdAt: isoNow(),
+      };
+      db.photoPurchases.push(purchase);
+      unlockedPhotoIds.push(photo.id);
+    }
+
+    return delay({ unlockedFactIds, unlockedPhotoIds }, 0);
   },
 
   /** Spend coins to learn who's behind an interest teaser (see teaserService). */
