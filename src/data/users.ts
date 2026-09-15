@@ -11,6 +11,7 @@ export const USERS: User[] = [
     bio: 'Здесь можно написать что-нибудь о себе.',
     interests: ['music', 'games', 'sport'],
     photoSeed: CURRENT_USER_ID,
+    verified: false,
     isCurrentUser: true,
   },
   {
@@ -21,6 +22,7 @@ export const USERS: User[] = [
     bio: 'Коллекционирую странные истории и плохо играю на гитаре.',
     interests: ['music', 'games', 'travel'],
     photoSeed: 'u_masha',
+    verified: true,
   },
   {
     id: 'u_alex',
@@ -30,6 +32,7 @@ export const USERS: User[] = [
     bio: 'Прохожу игры до конца титров. Даже плохие.',
     interests: ['games', 'music', 'food'],
     photoSeed: 'u_alex',
+    verified: false,
   },
   {
     id: 'u_sofia',
@@ -39,6 +42,7 @@ export const USERS: User[] = [
     bio: 'Путешествую так, будто у меня нет плана. Потому что у меня нет плана.',
     interests: ['travel', 'life', 'food'],
     photoSeed: 'u_sofia',
+    verified: true,
   },
   {
     id: 'u_lena',
@@ -48,6 +52,7 @@ export const USERS: User[] = [
     bio: 'Дизайнер. Слишком много мнений про шрифты.',
     interests: ['life', 'music', 'weird'],
     photoSeed: 'u_lena',
+    verified: false,
   },
   {
     id: 'u_timur',
@@ -57,6 +62,7 @@ export const USERS: User[] = [
     bio: 'Бегаю по утрам, чтобы оправдать себе завтрак.',
     interests: ['sport', 'food', 'travel'],
     photoSeed: 'u_timur',
+    verified: true,
   },
   {
     id: 'u_ira',
@@ -66,6 +72,7 @@ export const USERS: User[] = [
     bio: 'У меня плейлист на 9 часов и ни одного объяснения.',
     interests: ['music', 'weird', 'life'],
     photoSeed: 'u_ira',
+    verified: true,
   },
   {
     id: 'u_danil',
@@ -75,6 +82,7 @@ export const USERS: User[] = [
     bio: 'Готовлю лучше, чем говорю комплименты.',
     interests: ['food', 'games', 'life'],
     photoSeed: 'u_danil',
+    verified: false,
   },
   {
     id: 'u_olya',
@@ -84,6 +92,7 @@ export const USERS: User[] = [
     bio: 'Знаю несколько бесполезных фактов на любой случай жизни.',
     interests: ['weird', 'travel', 'sport'],
     photoSeed: 'u_olya',
+    verified: false,
   },
 ];
 

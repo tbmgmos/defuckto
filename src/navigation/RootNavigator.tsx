@@ -7,6 +7,7 @@ import { UserProfileScreen } from '../screens/UserProfileScreen';
 import { ChatScreen } from '../screens/ChatScreen';
 import { AddFactScreen } from '../screens/AddFactScreen';
 import { WalletScreen } from '../screens/WalletScreen';
+import { GuessGameScreen } from '../screens/GuessGameScreen';
 import { colors } from '../theme';
 import { useOnboardingStore } from '../stores/useOnboardingStore';
 
@@ -35,6 +36,11 @@ export function RootNavigator() {
       <Stack.Screen
         name="Wallet"
         component={WalletScreen}
+        options={{ presentation: 'modal' }}
+      />
+      <Stack.Screen
+        name="GuessGame"
+        component={GuessGameScreen}
         options={{ presentation: 'modal' }}
       />
     </Stack.Navigator>

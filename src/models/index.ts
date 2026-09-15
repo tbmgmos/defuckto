@@ -36,12 +36,17 @@ export interface FactCategoryMeta {
 // carries a status so a real moderation queue can be dropped in later.
 export type ModerationStatus = 'approved' | 'pending' | 'rejected';
 
+export type FactType = 'text' | 'voice';
+
 export interface Fact {
   id: string;
   authorId: string;
-  text: string;
+  text: string; // for voice facts, a short transcript/caption shown alongside the waveform
+  type: FactType;
+  durationSec?: number; // voice facts only
+  audioUri?: string; // voice facts only — local file URI recorded on-device
   category: FactCategory;
-  price: number;
+  price: number; // base price; the price actually charged grows with unlockCount, see economyService.computeCurrentPrice
   unlockCount: number;
   createdAt: string;
   moderationStatus: ModerationStatus;
@@ -57,6 +62,28 @@ export interface FactPurchase {
   createdAt: string;
 }
 
+// A profile photo beyond the first (always-free) one — unlockable with
+// coins, exactly like a fact. Mirrors the fact purchase flow on purpose:
+// "не всё видно на фото" turned into an actual product mechanic.
+export interface ProfilePhoto {
+  id: string;
+  ownerId: string;
+  seed: string; // drives the placeholder gradient, distinct per photo
+  price: number; // 0 = the free profile-cover photo
+  unlockCount: number;
+  createdAt: string;
+}
+
+export interface PhotoPurchase {
+  id: string;
+  photoId: string;
+  buyerId: string;
+  sellerId: string;
+  price: number;
+  sellerEarnings: number;
+  createdAt: string;
+}
+
 export interface User {
   id: string;
   name: string;
@@ -65,6 +92,7 @@ export interface User {
   bio: string;
   interests: InterestKey[];
   photoSeed: string;
+  verified?: boolean;
   isCurrentUser?: boolean;
 }
 
@@ -76,9 +104,14 @@ export interface Wallet {
 export type TransactionType =
   | 'fact_purchase' // this user paid to unlock someone else's fact
   | 'fact_sale' // this user earned because someone unlocked their fact
+  | 'photo_purchase'
+  | 'photo_sale'
   | 'question_sent'
   | 'question_reward'
   | 'quest_reward'
+  | 'streak_bonus'
+  | 'referral_bonus'
+  | 'reveal_interest' // spent coins to see who's curious about them
   | 'starter_bonus';
 
 export interface Transaction {
@@ -127,4 +160,54 @@ export interface MutualInterestEvent {
   otherUserId: string;
   createdAt: string;
   seen: boolean;
+}
+
+export type ReportTargetType = 'user' | 'fact';
+
+export interface Report {
+  id: string;
+  reporterId: string;
+  targetType: ReportTargetType;
+  targetId: string;
+  reason: string;
+  createdAt: string;
+}
+
+export interface Block {
+  id: string;
+  blockerId: string;
+  blockedId: string;
+  createdAt: string;
+}
+
+// A teaser for "кто-то хочет узнать про тебя" — deliberately withholds the
+// curious person's identity until the recipient spends coins to reveal it,
+// so revealing interest is itself part of the economy, not a free feature.
+export interface InterestTeaser {
+  id: string;
+  recipientId: string; // the author being asked about
+  curiousUserId: string; // withheld from the UI until revealed
+  factId: string;
+  createdAt: string;
+  revealed: boolean;
+}
+
+export interface StreakState {
+  userId: string;
+  currentStreak: number;
+  longestStreak: number;
+  lastActiveDate: string; // yyyy-mm-dd, local
+}
+
+export interface ReferralInfo {
+  code: string;
+  ownerId: string;
+  invitesRedeemed: number;
+}
+
+export interface DiscoveryFilters {
+  minAge: number;
+  maxAge: number;
+  city: string | null; // null = any city
+  interests: InterestKey[]; // empty = any interest
 }

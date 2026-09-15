@@ -5,17 +5,24 @@ import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { RootStackParamList } from '../navigation/types';
 import { colors, spacing, typography } from '../theme';
-import { PhotoHero } from '../components/PhotoHero';
+import { PhotoCarousel } from '../components/PhotoCarousel';
 import { FactCard } from '../components/FactCard';
 import { PurchaseFactSheet } from '../components/PurchaseFactSheet';
+import { PurchasePhotoSheet } from '../components/PurchasePhotoSheet';
 import { AskQuestionSheet } from '../components/AskQuestionSheet';
+import { ReportBlockSheet } from '../components/ReportBlockSheet';
 import { Badge } from '../components/Badge';
+import { VerifiedBadge } from '../components/VerifiedBadge';
+import { CompatibilityTag } from '../components/CompatibilityTag';
 import { getUserById } from '../data/users';
 import { useFactsStore } from '../stores/useFactsStore';
+import { usePhotosStore } from '../stores/usePhotosStore';
+import { useUsersStore } from '../stores/useUsersStore';
 import { useToastStore } from '../stores/useToastStore';
-import { askQuestion, exploreProfile, purchaseFact } from '../stores/actions';
+import { askQuestion, blockUser, exploreProfile, purchaseFact, purchasePhoto, reportFact, reportUser } from '../stores/actions';
 import { interestLabel } from '../data/interests';
-import { Fact } from '../models';
+import { compatibilityScore } from '../utils/compatibility';
+import { Fact, ProfilePhoto } from '../models';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'UserProfile'>;
 
@@ -25,15 +32,21 @@ export function UserProfileScreen({ route, navigation }: Props) {
   const { userId } = route.params;
   const insets = useSafeAreaInsets();
   const user = getUserById(userId);
+  const currentUser = useUsersStore((s) => s.currentUser);
   const allFacts = useFactsStore((s) => s.facts);
   const unlockedIds = useFactsStore((s) => s.unlockedIds);
+  const allPhotos = usePhotosStore((s) => s.photos);
+  const unlockedPhotoIds = usePhotosStore((s) => s.unlockedIds);
   const showToast = useToastStore((s) => s.show);
 
   const [purchaseTarget, setPurchaseTarget] = useState<Fact | null>(null);
   const [purchasing, setPurchasing] = useState(false);
+  const [photoTarget, setPhotoTarget] = useState<ProfilePhoto | null>(null);
+  const [purchasingPhoto, setPurchasingPhoto] = useState(false);
   const [questionTarget, setQuestionTarget] = useState<Fact | null>(null);
   const [asking, setAsking] = useState(false);
   const [revealFlow, setRevealFlow] = useState<{ factId: string; stage: RevealStage } | null>(null);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
     exploreProfile(userId);
@@ -46,6 +59,9 @@ export function UserProfileScreen({ route, navigation }: Props) {
         .sort((a, b) => (a.price === 0 ? -1 : b.price === 0 ? 1 : a.price - b.price)),
     [allFacts, userId],
   );
+
+  const photos = useMemo(() => allPhotos.filter((p) => p.ownerId === userId), [allPhotos, userId]);
+  const shared = currentUser && user ? compatibilityScore(currentUser, user) : 0;
 
   if (!user) {
     return (
@@ -61,12 +77,26 @@ export function UserProfileScreen({ route, navigation }: Props) {
     try {
       const outcome = await purchaseFact(purchaseTarget);
       setPurchaseTarget(null);
-      showToast(`Факт открыт · −${outcome.fact.price} 🪙`, 'success');
+      showToast(`Факт открыт · −${outcome.pricePaid} 🪙`, 'success');
       setRevealFlow({ factId: outcome.fact.id, stage: 'revealed' });
     } catch (e) {
       showToast(e instanceof Error ? e.message : 'Не получилось открыть факт', 'error');
     } finally {
       setPurchasing(false);
+    }
+  };
+
+  const handleConfirmPhotoPurchase = async () => {
+    if (!photoTarget) return;
+    setPurchasingPhoto(true);
+    try {
+      const outcome = await purchasePhoto(photoTarget);
+      setPhotoTarget(null);
+      showToast(`Фото открыто · −${outcome.pricePaid} 🪙`, 'success');
+    } catch (e) {
+      showToast(e instanceof Error ? e.message : 'Не получилось открыть фото', 'error');
+    } finally {
+      setPurchasingPhoto(false);
     }
   };
 
@@ -90,20 +120,49 @@ export function UserProfileScreen({ route, navigation }: Props) {
     }
   };
 
+  const handleReportFact = async (reason: string) => {
+    const target = sortedFacts[0];
+    if (!target) return;
+    await reportFact(target.id, reason);
+  };
+
   return (
     <View style={styles.root}>
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        <PhotoHero seed={user.photoSeed} name={user.name} height={380} borderRadius={0} style={styles.hero}>
-          <Pressable onPress={navigation.goBack} style={[styles.backButton, { top: insets.top + 12 }]} accessibilityRole="button" accessibilityLabel="Назад" hitSlop={10}>
-            <Ionicons name="chevron-back" size={22} color={colors.textPrimary} />
-          </Pressable>
-        </PhotoHero>
+        <PhotoCarousel
+          name={user.name}
+          photos={photos}
+          unlockedIds={unlockedPhotoIds}
+          height={380}
+          onUnlock={(photo) => setPhotoTarget(photo)}
+          unlockingId={purchasingPhoto ? photoTarget?.id : null}
+          headerOverlay={
+            <View style={styles.heroButtons}>
+              <Pressable onPress={navigation.goBack} style={[styles.iconButton, styles.backButton, { top: insets.top + 12 }]} accessibilityRole="button" accessibilityLabel="Назад" hitSlop={10}>
+                <Ionicons name="chevron-back" size={22} color={colors.textPrimary} />
+              </Pressable>
+              <Pressable
+                onPress={() => setMenuOpen(true)}
+                style={[styles.iconButton, styles.menuButton, { top: insets.top + 12 }]}
+                accessibilityRole="button"
+                accessibilityLabel="Ещё"
+                hitSlop={10}
+              >
+                <Ionicons name="ellipsis-horizontal" size={20} color={colors.textPrimary} />
+              </Pressable>
+            </View>
+          }
+        />
 
         <View style={styles.body}>
-          <Text style={typography.title1}>{user.name}</Text>
+          <View style={styles.nameRow}>
+            <Text style={typography.title1}>{user.name}</Text>
+            {user.verified ? <VerifiedBadge /> : null}
+          </View>
           <Text style={styles.meta}>
             {user.age} · {user.city}
           </Text>
+          {shared > 0 ? <CompatibilityTag sharedCount={shared} /> : null}
           <View style={styles.interestsRow}>
             {user.interests.map((i) => (
               <Badge key={i} label={interestLabel(i)} tone="neutral" />
@@ -160,11 +219,31 @@ export function UserProfileScreen({ route, navigation }: Props) {
         loading={purchasing}
       />
 
+      <PurchasePhotoSheet
+        visible={!!photoTarget}
+        photo={photoTarget}
+        onClose={() => setPhotoTarget(null)}
+        onConfirm={handleConfirmPhotoPurchase}
+        loading={purchasingPhoto}
+      />
+
       <AskQuestionSheet
         visible={!!questionTarget}
         onClose={() => setQuestionTarget(null)}
         onSend={handleSendQuestion}
         loading={asking}
+      />
+
+      <ReportBlockSheet
+        visible={menuOpen}
+        userName={user.name}
+        onClose={() => setMenuOpen(false)}
+        onReportFact={handleReportFact}
+        onReportUser={(reason) => reportUser(user.id, reason)}
+        onBlock={async () => {
+          await blockUser(user.id);
+          navigation.goBack();
+        }}
       />
     </View>
   );
@@ -178,12 +257,11 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingBottom: spacing.xxxl,
   },
-  hero: {
-    justifyContent: 'flex-start',
+  heroButtons: {
+    ...StyleSheet.absoluteFill,
   },
-  backButton: {
+  iconButton: {
     position: 'absolute',
-    left: spacing.lg,
     width: 40,
     height: 40,
     borderRadius: 20,
@@ -191,14 +269,27 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  backButton: {
+    left: spacing.lg,
+  },
+  menuButton: {
+    right: spacing.lg,
+  },
   body: {
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.lg,
+    gap: 2,
+  },
+  nameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
   },
   meta: {
     ...typography.bodyMedium,
     color: colors.textSecondary,
     marginTop: 2,
+    marginBottom: spacing.xs,
   },
   interestsRow: {
     flexDirection: 'row',

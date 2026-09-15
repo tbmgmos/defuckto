@@ -3,25 +3,59 @@
 // dumb — they call these functions and render whatever the stores end up
 // holding. See spec §32: "UI не должен содержать бизнес-логику экономики".
 
-import { CreateFactInput, chatService, economyService, factService, interestService, simulationService } from '../services';
+import {
+  CreateFactInput,
+  chatService,
+  economyService,
+  factService,
+  interestService,
+  moderationService,
+  notificationService,
+  referralService,
+  simulationService,
+  teaserService,
+  verificationService,
+  walletService,
+  REFERRAL_BONUS,
+} from '../services';
 import { getUserById, CURRENT_USER_ID } from '../data/users';
 import { useWalletStore } from './useWalletStore';
 import { useFactsStore } from './useFactsStore';
+import { usePhotosStore } from './usePhotosStore';
 import { useQuestsStore } from './useQuestsStore';
 import { useUsersStore } from './useUsersStore';
 import { useChatStore } from './useChatStore';
 import { useInterestStore } from './useInterestStore';
 import { useToastStore } from './useToastStore';
-import { Fact } from '../models';
+import { useModerationStore } from './useModerationStore';
+import { useStreakStore } from './useStreakStore';
+import { useTeasersStore } from './useTeasersStore';
+import { usePremiumStore } from './usePremiumStore';
+import { Fact, ProfilePhoto } from '../models';
 
 export async function bootstrapApp(): Promise<void> {
   await Promise.all([
     useWalletStore.getState().load(),
     useFactsStore.getState().load(),
+    usePhotosStore.getState().load(),
     useUsersStore.getState().load(),
     useQuestsStore.getState().load(),
     useChatStore.getState().load(),
+    useModerationStore.getState().load(),
+    useStreakStore.getState().load(),
+    useTeasersStore.getState().load(),
+    usePremiumStore.getState().load(),
   ]);
+}
+
+/** Advances the daily streak at most once per day and surfaces the bonus, if any. */
+async function touchDailyStreak(): Promise<void> {
+  const { advanced, bonus } = await useStreakStore.getState().recordToday();
+  if (!advanced) return;
+  await walletService.earnCoins(CURRENT_USER_ID, bonus, 'Серия дней подряд', 'streak_bonus');
+  await useWalletStore.getState().load();
+  const streak = useStreakStore.getState().streak;
+  useToastStore.getState().show(`🔥 Серия ${streak?.currentStreak ?? ''} дней подряд · +${bonus} 🪙`, 'success');
 }
 
 export async function exploreProfile(userId: string): Promise<void> {
@@ -34,6 +68,7 @@ export async function exploreProfile(userId: string): Promise<void> {
 export interface PurchaseOutcome {
   fact: Fact;
   sellerEarnings: number;
+  pricePaid: number;
   mutualInterest: boolean;
 }
 
@@ -48,11 +83,32 @@ export async function purchaseFact(fact: Fact): Promise<PurchaseOutcome> {
   useFactsStore.getState().markUnlocked(fact.id);
   await useQuestsStore.getState().advance('unlock_fact');
   await useWalletStore.getState().load();
+  await touchDailyStreak();
 
   const mutualEvent = await interestService.recordInteraction(fact.authorId);
   if (mutualEvent) useInterestStore.getState().show(mutualEvent);
 
-  return { fact: result.fact, sellerEarnings: result.sellerEarnings, mutualInterest: !!mutualEvent };
+  return { fact: result.fact, sellerEarnings: result.sellerEarnings, pricePaid: result.pricePaid, mutualInterest: !!mutualEvent };
+}
+
+export interface PurchasePhotoOutcome {
+  photo: ProfilePhoto;
+  pricePaid: number;
+}
+
+export async function purchasePhoto(photo: ProfilePhoto): Promise<PurchasePhotoOutcome> {
+  const buyer = useUsersStore.getState().currentUser;
+  const author = getUserById(photo.ownerId);
+  if (!buyer || !author) throw new Error('Не удалось определить пользователей');
+
+  const result = await economyService.purchasePhoto(CURRENT_USER_ID, photo.id, buyer.name, author.name);
+
+  usePhotosStore.getState().applyPhotoUpdate(result.photo);
+  usePhotosStore.getState().markUnlocked(photo.id);
+  await useWalletStore.getState().load();
+  await touchDailyStreak();
+
+  return { photo: result.photo, pricePaid: result.pricePaid };
 }
 
 export async function askQuestion(fact: Fact, questionText: string): Promise<void> {
@@ -63,6 +119,7 @@ export async function askQuestion(fact: Fact, questionText: string): Promise<voi
 
   await useQuestsStore.getState().advance('ask_question');
   await useWalletStore.getState().load();
+  await touchDailyStreak();
 
   const conversation = await chatService.getConversation(result.conversationId);
   if (conversation) useChatStore.getState().upsertConversation(conversation);
@@ -77,6 +134,7 @@ export async function publishFact(input: CreateFactInput): Promise<Fact> {
   useFactsStore.getState().markUnlocked(fact.id);
   await useQuestsStore.getState().advance('add_fact');
   await useWalletStore.getState().load();
+  await touchDailyStreak();
   return fact;
 }
 
@@ -85,8 +143,57 @@ export async function sendChatMessage(conversationId: string, text: string): Pro
 }
 
 export async function simulateIncomingActivity(): Promise<void> {
-  const result = await simulationService.maybeSimulateIncomingUnlock();
+  const result = await simulationService.maybeSimulateIncomingActivity();
   if (!result) return;
+
+  if (result.kind === 'unlock') {
+    await useWalletStore.getState().load();
+    const message = `+${result.amount} 🪙 · ${result.buyerName} открыл(а) твой факт`;
+    useToastStore.getState().show(message, 'success');
+    await notificationService.notify('Твой факт открыли', message);
+  } else {
+    await useTeasersStore.getState().load();
+    useToastStore.getState().show('Кто-то заинтересовался твоим фактом 👀', 'default');
+    await notificationService.notify('DEFUCKTO', 'Кто-то заинтересовался твоим фактом 👀');
+  }
+}
+
+export async function revealTeaser(teaserId: string): Promise<string> {
+  const teaser = await teaserService.reveal(teaserId, CURRENT_USER_ID);
+  useTeasersStore.getState().applyReveal(teaser);
   await useWalletStore.getState().load();
-  useToastStore.getState().show(`+${result.amount} 🪙 · ${result.buyerName} открыл(а) твой факт`, 'success');
+  const curious = getUserById(teaser.curiousUserId);
+  return curious?.name ?? 'Кто-то';
+}
+
+export async function submitVerification(): Promise<void> {
+  await verificationService.submitVerification(CURRENT_USER_ID);
+  useUsersStore.getState().setVerified(true);
+}
+
+export async function reportFact(factId: string, reason: string): Promise<void> {
+  await moderationService.reportContent(CURRENT_USER_ID, 'fact', factId, reason);
+  useToastStore.getState().show('Жалоба отправлена. Спасибо, что следишь за качеством.', 'success');
+}
+
+export async function reportUser(userId: string, reason: string): Promise<void> {
+  await moderationService.reportContent(CURRENT_USER_ID, 'user', userId, reason);
+  useToastStore.getState().show('Жалоба отправлена.', 'success');
+}
+
+export async function blockUser(userId: string): Promise<void> {
+  await useModerationStore.getState().block(userId);
+  useToastStore.getState().show('Пользователь заблокирован.', 'success');
+}
+
+export async function redeemReferral(): Promise<void> {
+  await referralService.simulateRedeem(CURRENT_USER_ID);
+  await walletService.earnCoins(CURRENT_USER_ID, REFERRAL_BONUS, 'Друг присоединился по твоему коду', 'referral_bonus');
+  await useWalletStore.getState().load();
+  useToastStore.getState().show(`+${REFERRAL_BONUS} 🪙 · Друг присоединился по твоему коду`, 'success');
+}
+
+export async function activatePremium(): Promise<void> {
+  await usePremiumStore.getState().activate();
+  useToastStore.getState().show('DEFUCKTO+ активирован (демо-режим).', 'success');
 }

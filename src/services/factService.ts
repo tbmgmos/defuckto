@@ -1,4 +1,4 @@
-import { Fact, FactCategory } from '../models';
+import { Fact, FactCategory, FactType } from '../models';
 import { db, delay } from './localDatabase';
 import { createId } from '../utils/id';
 import { isoNow } from '../utils/date';
@@ -8,6 +8,9 @@ export interface CreateFactInput {
   text: string;
   category: FactCategory;
   price: number;
+  type?: FactType;
+  durationSec?: number;
+  audioUri?: string;
 }
 
 export const factService = {
@@ -49,6 +52,9 @@ export const factService = {
       id: createId('f'),
       authorId: input.authorId,
       text: input.text.trim(),
+      type: input.type ?? 'text',
+      durationSec: input.durationSec,
+      audioUri: input.audioUri,
       category: input.category,
       price: input.price,
       unlockCount: 0,

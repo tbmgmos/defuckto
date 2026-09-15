@@ -9,6 +9,7 @@ import { ToastHost } from './src/components/ToastHost';
 import { MutualInterestOverlay } from './src/components/MutualInterestOverlay';
 import { useOnboardingStore } from './src/stores/useOnboardingStore';
 import { bootstrapApp, simulateIncomingActivity } from './src/stores/actions';
+import { notificationService } from './src/services/notificationService';
 import { colors } from './src/theme';
 
 const navigationTheme: Theme = {
@@ -38,6 +39,8 @@ export default function App() {
     (async () => {
       await Promise.all([checkOnboardingStatus(), bootstrapApp()]);
       setReady(true);
+      // Fire-and-forget — a denied/ignored permission just means notify() stays a no-op.
+      void notificationService.requestPermission();
     })();
   }, [checkOnboardingStatus]);
 

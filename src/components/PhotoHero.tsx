@@ -9,6 +9,8 @@ interface PhotoHeroProps {
   height: number;
   borderRadius?: number;
   children?: React.ReactNode;
+  /** Absolutely fills the whole hero (not just the bottom scrim area) — for things like back/menu buttons or a lock overlay that aren't bottom-anchored caption content. */
+  fillOverlay?: React.ReactNode;
   style?: ViewStyle;
 }
 
@@ -25,7 +27,7 @@ function hashSeed(seed: string): number {
  * giant watermark initial, scrimmed at the bottom so overlaid text stays
  * legible. Same no-network rationale as Avatar (§34).
  */
-export function PhotoHero({ seed, name, height, borderRadius = radius.xl, children, style }: PhotoHeroProps) {
+export function PhotoHero({ seed, name, height, borderRadius = radius.xl, children, fillOverlay, style }: PhotoHeroProps) {
   const gradient = useMemo(() => {
     const idx = hashSeed(seed) % colors.avatarGradients.length;
     return colors.avatarGradients[idx];
@@ -44,6 +46,7 @@ export function PhotoHero({ seed, name, height, borderRadius = radius.xl, childr
         pointerEvents="none"
       />
       {children ? <View style={styles.overlay}>{children}</View> : null}
+      {fillOverlay ? <View style={StyleSheet.absoluteFill}>{fillOverlay}</View> : null}
     </View>
   );
 }

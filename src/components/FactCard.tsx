@@ -4,6 +4,8 @@ import { colors, radius, spacing, typography } from '../theme';
 import { FACT_CATEGORIES } from '../data/factCategories';
 import { Fact } from '../models';
 import { Button } from './Button';
+import { VoiceFactPlayer } from './VoiceFactPlayer';
+import { computeCurrentPrice } from '../services/economyService';
 
 interface FactCardProps {
   fact: Fact;
@@ -20,6 +22,7 @@ interface FactCardProps {
 export function FactCard({ fact, locked, onUnlock, unlocking }: FactCardProps) {
   const reveal = useRef(new Animated.Value(locked ? 0 : 1)).current;
   const category = FACT_CATEGORIES[fact.category];
+  const price = computeCurrentPrice(fact.price, fact.unlockCount);
 
   useEffect(() => {
     if (!locked) {
@@ -35,9 +38,16 @@ export function FactCard({ fact, locked, onUnlock, unlocking }: FactCardProps) {
         <View style={styles.body}>
           {locked ? (
             <>
-              <Text style={styles.lockedHint}>{category.label} · закрытый факт</Text>
-              <Text style={styles.priceLabel}>{fact.price} 🪙</Text>
+              <Text style={styles.lockedHint}>
+                {category.label} · закрытый {fact.type === 'voice' ? 'голосовой факт' : 'факт'}
+              </Text>
+              <Text style={styles.priceLabel}>{price} 🪙</Text>
+              {fact.unlockCount > 0 ? (
+                <Text style={styles.socialProof}>{fact.unlockCount} человек уже узнали</Text>
+              ) : null}
             </>
+          ) : fact.type === 'voice' && fact.audioUri ? (
+            <VoiceFactPlayer uri={fact.audioUri} durationSec={fact.durationSec ?? 0} />
           ) : (
             <Animated.Text
               style={[
@@ -56,7 +66,7 @@ export function FactCard({ fact, locked, onUnlock, unlocking }: FactCardProps) {
       </View>
       {locked ? (
         <Button
-          label={unlocking ? 'Открываем…' : `Открыть за ${fact.price} 🪙`}
+          label={unlocking ? 'Открываем…' : `Открыть за ${price} 🪙`}
           onPress={onUnlock}
           variant="secondary"
           disabled={unlocking}
@@ -102,6 +112,11 @@ const styles = StyleSheet.create({
   priceLabel: {
     ...typography.headline,
     color: colors.accentText,
+  },
+  socialProof: {
+    ...typography.caption,
+    textTransform: 'none',
+    letterSpacing: 0,
   },
   cta: {
     alignSelf: 'flex-start',

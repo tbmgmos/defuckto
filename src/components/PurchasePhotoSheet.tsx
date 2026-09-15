@@ -1,26 +1,26 @@
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text } from 'react-native';
 import { BottomSheet } from './BottomSheet';
 import { Button } from './Button';
 import { colors, spacing, typography } from '../theme';
-import { Fact } from '../models';
+import { ProfilePhoto } from '../models';
 import { computeCurrentPrice } from '../services/economyService';
 
-interface PurchaseFactSheetProps {
+interface PurchasePhotoSheetProps {
   visible: boolean;
-  fact: Fact | null;
+  photo: ProfilePhoto | null;
   onClose: () => void;
   onConfirm: () => void;
   loading?: boolean;
 }
 
-export function PurchaseFactSheet({ visible, fact, onClose, onConfirm, loading }: PurchaseFactSheetProps) {
-  const price = fact ? computeCurrentPrice(fact.price, fact.unlockCount) : 0;
+export function PurchasePhotoSheet({ visible, photo, onClose, onConfirm, loading }: PurchasePhotoSheetProps) {
+  const price = photo ? computeCurrentPrice(photo.price, photo.unlockCount) : 0;
   return (
-    <BottomSheet visible={visible} onClose={onClose} accessibilityLabel="Открыть факт">
-      <Text style={typography.title2}>Открыть факт?</Text>
+    <BottomSheet visible={visible} onClose={onClose} accessibilityLabel="Открыть фото">
+      <Text style={typography.title2}>Открыть фото?</Text>
       <Text style={[typography.body, styles.body]}>
-        С тебя {price} 🪙.{'\n'}Автор факта получит часть этой суммы.
+        С тебя {price} 🪙.{'\n'}Не всё видно на фото — иногда буквально.
       </Text>
       <Button
         label={loading ? 'Открываем…' : `Открыть за ${price} 🪙`}

@@ -14,6 +14,7 @@ export type RootStackParamList = {
   Chat: { conversationId: string };
   AddFact: undefined;
   Wallet: undefined;
+  GuessGame: undefined;
 };
 
 declare global {

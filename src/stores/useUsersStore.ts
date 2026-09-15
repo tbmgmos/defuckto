@@ -10,6 +10,7 @@ interface UsersState {
   load: () => Promise<void>;
   markExplored: (userId: string) => boolean; // returns true the first time a profile is explored
   setBio: (bio: string) => void;
+  setVerified: (verified: boolean) => void;
 }
 
 export const useUsersStore = create<UsersState>((set, get) => ({
@@ -39,5 +40,11 @@ export const useUsersStore = create<UsersState>((set, get) => ({
     const current = get().currentUser;
     if (!current) return;
     set({ currentUser: { ...current, bio } });
+  },
+
+  setVerified: (verified) => {
+    const current = get().currentUser;
+    if (!current) return;
+    set({ currentUser: { ...current, verified } });
   },
 }));
