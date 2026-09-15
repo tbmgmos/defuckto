@@ -18,12 +18,15 @@
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.tbmgmos.defuckto"
     },
     "web": {
       "favicon": "./assets/favicon.png",
       "backgroundColor": "#0A0A0B"
     },
-    "plugins": ["expo-audio"]
+    "plugins": [
+      "expo-audio"
+    ]
   }
 }
