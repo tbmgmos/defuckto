@@ -11,6 +11,7 @@ interface UsersState {
   markExplored: (userId: string) => boolean; // returns true the first time a profile is explored
   setBio: (bio: string) => void;
   setVerified: (verified: boolean) => void;
+  setPhoto: (photoUri: string | null) => void;
 }
 
 export const useUsersStore = create<UsersState>((set, get) => ({
@@ -46,5 +47,11 @@ export const useUsersStore = create<UsersState>((set, get) => ({
     const current = get().currentUser;
     if (!current) return;
     set({ currentUser: { ...current, verified } });
+  },
+
+  setPhoto: (photoUri) => {
+    const current = get().currentUser;
+    if (!current) return;
+    set({ currentUser: { ...current, photoUri: photoUri ?? undefined } });
   },
 }));

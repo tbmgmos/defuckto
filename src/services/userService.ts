@@ -27,4 +27,11 @@ export const userService = {
     user.bio = bio;
     return delay(user);
   },
+
+  async updatePhoto(userId: string, photoUri: string | null): Promise<User> {
+    const user = db.users.find((u) => u.id === userId);
+    if (!user) throw new Error('User not found');
+    user.photoUri = photoUri ?? undefined;
+    return delay(user);
+  },
 };

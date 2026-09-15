@@ -1,11 +1,12 @@
 import React, { useCallback, useMemo, useState } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { CompositeScreenProps } from '@react-navigation/native';
 import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
+import * as ImagePicker from 'expo-image-picker';
 import { RootStackParamList, TabParamList } from '../navigation/types';
 import { PhotoHero } from '../components/PhotoHero';
 import { Badge } from '../components/Badge';
@@ -17,13 +18,14 @@ import { VerifiedBadge } from '../components/VerifiedBadge';
 import { VerificationSheet } from '../components/VerificationSheet';
 import { PaywallSheet } from '../components/PaywallSheet';
 import { ReferralSheet } from '../components/ReferralSheet';
+import { PhotoPickerSheet } from '../components/PhotoPickerSheet';
 import { useUsersStore } from '../stores/useUsersStore';
 import { useFactsStore } from '../stores/useFactsStore';
 import { useWalletStore } from '../stores/useWalletStore';
 import { usePremiumStore } from '../stores/usePremiumStore';
 import { statsService, ProfileStats } from '../services/statsService';
 import { referralService } from '../services/referralService';
-import { submitVerification, redeemReferral, activatePremium } from '../stores/actions';
+import { submitVerification, redeemReferral, activatePremium, updateProfilePhoto, removeProfilePhoto } from '../stores/actions';
 import { interestLabel } from '../data/interests';
 import { FACT_CATEGORIES } from '../data/factCategories';
 import { CURRENT_USER_ID } from '../data/users';
@@ -48,6 +50,36 @@ export function MyProfileScreen({ navigation }: Props) {
   const [verifySheetOpen, setVerifySheetOpen] = useState(false);
   const [paywallOpen, setPaywallOpen] = useState(false);
   const [referralOpen, setReferralOpen] = useState(false);
+  const [photoPickerOpen, setPhotoPickerOpen] = useState(false);
+
+  const pickPhotoFromCamera = useCallback(async () => {
+    const permission = await ImagePicker.requestCameraPermissionsAsync();
+    if (!permission.granted) {
+      Alert.alert('Нет доступа к камере', 'Разреши доступ к камере в настройках устройства.');
+      return;
+    }
+    const result = await ImagePicker.launchCameraAsync({ allowsEditing: true, aspect: [3, 4], quality: 0.8 });
+    if (!result.canceled && result.assets[0]) {
+      await updateProfilePhoto(result.assets[0].uri);
+    }
+  }, []);
+
+  const pickPhotoFromLibrary = useCallback(async () => {
+    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!permission.granted) {
+      Alert.alert('Нет доступа к галерее', 'Разреши доступ к фото в настройках устройства.');
+      return;
+    }
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsEditing: true,
+      aspect: [3, 4],
+      quality: 0.8,
+    });
+    if (!result.canceled && result.assets[0]) {
+      await updateProfilePhoto(result.assets[0].uri);
+    }
+  }, []);
 
   useFocusEffect(
     useCallback(() => {
@@ -71,12 +103,24 @@ export function MyProfileScreen({ navigation }: Props) {
       <PhotoHero
         seed={currentUser.photoSeed}
         name={currentUser.name}
+        photoUri={currentUser.photoUri}
         height={320}
         borderRadius={0}
         fillOverlay={
-          <View style={[styles.balanceChip, { top: insets.top + 12 }]}>
-            <CoinBalance balance={balance} size="sm" onPress={() => navigation.navigate('Wallet')} />
-          </View>
+          <>
+            <View style={[styles.balanceChip, { top: insets.top + 12 }]}>
+              <CoinBalance balance={balance} size="sm" onPress={() => navigation.navigate('Wallet')} />
+            </View>
+            <Pressable
+              style={styles.editPhotoButton}
+              onPress={() => setPhotoPickerOpen(true)}
+              accessibilityRole="button"
+              accessibilityLabel="Изменить фото профиля"
+              hitSlop={8}
+            >
+              <Ionicons name="camera" size={18} color={colors.textPrimary} />
+            </Pressable>
+          </>
         }
       />
 
@@ -172,6 +216,14 @@ export function MyProfileScreen({ navigation }: Props) {
         onClose={() => setReferralOpen(false)}
         onSimulateRedeem={redeemReferral}
       />
+      <PhotoPickerSheet
+        visible={photoPickerOpen}
+        hasPhoto={!!currentUser.photoUri}
+        onClose={() => setPhotoPickerOpen(false)}
+        onPickCamera={pickPhotoFromCamera}
+        onPickLibrary={pickPhotoFromLibrary}
+        onRemove={removeProfilePhoto}
+      />
     </ScrollView>
   );
 }
@@ -187,6 +239,19 @@ const styles = StyleSheet.create({
   balanceChip: {
     position: 'absolute',
     right: spacing.lg,
+  },
+  editPhotoButton: {
+    position: 'absolute',
+    right: spacing.lg,
+    bottom: spacing.lg,
+    width: 40,
+    height: 40,
+    borderRadius: radius.pill,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.overlayScrim,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   body: {
     paddingHorizontal: spacing.lg,

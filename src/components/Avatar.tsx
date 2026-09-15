@@ -1,11 +1,12 @@
 import React, { useMemo } from 'react';
-import { StyleSheet, Text, View, ViewStyle } from 'react-native';
+import { Image, ImageStyle, StyleSheet, Text, View, ViewStyle } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { colors, radius } from '../theme';
 
 interface AvatarProps {
   seed: string;
   name: string;
+  photoUri?: string;
   size?: number;
   rounded?: 'circle' | 'card';
   style?: ViewStyle;
@@ -28,13 +29,24 @@ function getInitial(name: string): string {
  * user id. Doubles as the "photo" fallback the spec asks for (§34) and, in
  * this demo, as the only photo treatment at all.
  */
-export function Avatar({ seed, name, size = 56, rounded = 'circle', style }: AvatarProps) {
+export function Avatar({ seed, name, photoUri, size = 56, rounded = 'circle', style }: AvatarProps) {
   const gradient = useMemo(() => {
     const idx = hashSeed(seed) % colors.avatarGradients.length;
     return colors.avatarGradients[idx];
   }, [seed]);
 
   const borderRadius = rounded === 'circle' ? size / 2 : radius.lg;
+
+  if (photoUri) {
+    return (
+      <Image
+        source={{ uri: photoUri }}
+        style={[styles.photo, { width: size, height: size, borderRadius }, style as ImageStyle]}
+        accessibilityElementsHidden
+        importantForAccessibility="no"
+      />
+    );
+  }
 
   return (
     <LinearGradient
@@ -58,6 +70,9 @@ const styles = StyleSheet.create({
   container: {
     alignItems: 'center',
     justifyContent: 'center',
+    overflow: 'hidden',
+  },
+  photo: {
     overflow: 'hidden',
   },
   initial: {

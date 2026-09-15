@@ -1,11 +1,12 @@
 import React, { useMemo } from 'react';
-import { StyleSheet, Text, View, ViewStyle } from 'react-native';
+import { Image, StyleSheet, Text, View, ViewStyle } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { colors, radius } from '../theme';
 
 interface PhotoHeroProps {
   seed: string;
   name: string;
+  photoUri?: string;
   height: number;
   borderRadius?: number;
   children?: React.ReactNode;
@@ -27,7 +28,7 @@ function hashSeed(seed: string): number {
  * giant watermark initial, scrimmed at the bottom so overlaid text stays
  * legible. Same no-network rationale as Avatar (§34).
  */
-export function PhotoHero({ seed, name, height, borderRadius = radius.xl, children, fillOverlay, style }: PhotoHeroProps) {
+export function PhotoHero({ seed, name, photoUri, height, borderRadius = radius.xl, children, fillOverlay, style }: PhotoHeroProps) {
   const gradient = useMemo(() => {
     const idx = hashSeed(seed) % colors.avatarGradients.length;
     return colors.avatarGradients[idx];
@@ -37,9 +38,13 @@ export function PhotoHero({ seed, name, height, borderRadius = radius.xl, childr
 
   return (
     <View style={[{ height, borderRadius, overflow: 'hidden' }, style]}>
-      <LinearGradient colors={gradient} start={{ x: 0.1, y: 0 }} end={{ x: 0.7, y: 1 }} style={StyleSheet.absoluteFill}>
-        <Text style={[styles.watermark, { fontSize: height * 0.56, lineHeight: height * 0.6 }]}>{initial}</Text>
-      </LinearGradient>
+      {photoUri ? (
+        <Image source={{ uri: photoUri }} style={StyleSheet.absoluteFill} resizeMode="cover" />
+      ) : (
+        <LinearGradient colors={gradient} start={{ x: 0.1, y: 0 }} end={{ x: 0.7, y: 1 }} style={StyleSheet.absoluteFill}>
+          <Text style={[styles.watermark, { fontSize: height * 0.56, lineHeight: height * 0.6 }]}>{initial}</Text>
+        </LinearGradient>
+      )}
       <LinearGradient
         colors={['rgba(10,10,11,0)', 'rgba(10,10,11,0.75)']}
         style={StyleSheet.absoluteFill}

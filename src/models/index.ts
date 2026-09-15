@@ -92,6 +92,7 @@ export interface User {
   bio: string;
   interests: InterestKey[];
   photoSeed: string;
+  photoUri?: string; // real photo picked by the user — falls back to the gradient placeholder when absent
   verified?: boolean;
   isCurrentUser?: boolean;
 }

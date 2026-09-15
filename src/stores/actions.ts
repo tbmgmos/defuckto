@@ -14,6 +14,7 @@ import {
   referralService,
   simulationService,
   teaserService,
+  userService,
   verificationService,
   walletService,
   REFERRAL_BONUS,
@@ -216,6 +217,18 @@ export async function revealTeaser(teaserId: string): Promise<string> {
   await useWalletStore.getState().load();
   const curious = getUserById(teaser.curiousUserId);
   return curious?.name ?? 'Кто-то';
+}
+
+export async function updateProfilePhoto(photoUri: string): Promise<void> {
+  await userService.updatePhoto(CURRENT_USER_ID, photoUri);
+  useUsersStore.getState().setPhoto(photoUri);
+  useToastStore.getState().show('Фото профиля обновлено', 'success');
+}
+
+export async function removeProfilePhoto(): Promise<void> {
+  await userService.updatePhoto(CURRENT_USER_ID, null);
+  useUsersStore.getState().setPhoto(null);
+  useToastStore.getState().show('Фото удалено', 'default');
 }
 
 export async function submitVerification(): Promise<void> {
