@@ -52,7 +52,13 @@ export function MessagesListScreen({ navigation }: Props) {
               <View style={styles.teasersSection}>
                 <Text style={[typography.eyebrow, styles.teasersTitle]}>Кто-то заинтересовался</Text>
                 {teasers.map((t) => (
-                  <TeaserRow key={t.id} teaser={t} onReveal={() => handleReveal(t.id)} revealing={revealingId === t.id} />
+                  <TeaserRow
+                    key={t.id}
+                    teaser={t}
+                    onReveal={() => handleReveal(t.id)}
+                    onOpenProfile={() => navigation.navigate('UserProfile', { userId: t.curiousUserId })}
+                    revealing={revealingId === t.id}
+                  />
                 ))}
               </View>
             ) : null}

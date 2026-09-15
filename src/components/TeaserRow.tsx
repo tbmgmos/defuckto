@@ -1,5 +1,6 @@
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { colors, radius, spacing, typography } from '../theme';
 import { Button } from './Button';
 import { InterestTeaser } from '../models';
@@ -10,14 +11,15 @@ import { formatRelativeTime } from '../utils/date';
 interface TeaserRowProps {
   teaser: InterestTeaser;
   onReveal: () => void;
+  onOpenProfile: () => void;
   revealing?: boolean;
 }
 
-export function TeaserRow({ teaser, onReveal, revealing }: TeaserRowProps) {
+export function TeaserRow({ teaser, onReveal, onOpenProfile, revealing }: TeaserRowProps) {
   const curious = teaser.revealed ? getUserById(teaser.curiousUserId) : null;
 
-  return (
-    <View style={styles.container}>
+  const body = (
+    <>
       <View style={styles.textRow}>
         <Text style={styles.emoji}>👀</Text>
         <View style={styles.textCol}>
@@ -26,6 +28,7 @@ export function TeaserRow({ teaser, onReveal, revealing }: TeaserRowProps) {
           </Text>
           <Text style={styles.time}>{formatRelativeTime(teaser.createdAt)}</Text>
         </View>
+        {teaser.revealed ? <Ionicons name="chevron-forward" size={18} color={colors.textTertiary} /> : null}
       </View>
       {!teaser.revealed ? (
         <Button
@@ -38,8 +41,25 @@ export function TeaserRow({ teaser, onReveal, revealing }: TeaserRowProps) {
           style={styles.revealButton}
         />
       ) : null}
-    </View>
+    </>
   );
+
+  // Only tappable-through-to-a-profile once there's a real person to show —
+  // revealing is still gated behind the button above, not the row itself.
+  if (teaser.revealed) {
+    return (
+      <Pressable
+        onPress={onOpenProfile}
+        style={styles.container}
+        accessibilityRole="button"
+        accessibilityLabel={`Открыть профиль ${curious?.name ?? ''}`}
+      >
+        {body}
+      </Pressable>
+    );
+  }
+
+  return <View style={styles.container}>{body}</View>;
 }
 
 const styles = StyleSheet.create({
