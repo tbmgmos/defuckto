@@ -16,6 +16,7 @@ export function resetDb(): void {
   db.mutualInterests.length = 0;
   db.transactions.length = 0;
   db.teasers.length = 0;
+  db.topPlacements.clear();
   db.notifications.length = 0;
   db.wallets.clear();
   db.interactionCounts.clear();

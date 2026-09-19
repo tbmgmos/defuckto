@@ -38,6 +38,11 @@ export type ModerationStatus = 'approved' | 'pending' | 'rejected';
 
 export type FactType = 'text' | 'voice';
 
+export type Gender = 'm' | 'f';
+
+// What a person says they are here for — drives the "Только дружба" search filter.
+export type LookingFor = 'dating' | 'friendship' | 'any';
+
 export interface Fact {
   id: string;
   authorId: string;
@@ -50,6 +55,9 @@ export interface Fact {
   unlockCount: number;
   createdAt: string;
   moderationStatus: ModerationStatus;
+  // "Горячий факт": a spicier fact the viewer taps into on purpose (its own
+  // button on a profile). Always carries a price and only shows to others once approved.
+  hot?: boolean;
 }
 
 export interface FactPurchase {
@@ -89,6 +97,8 @@ export interface User {
   name: string;
   age: number;
   city: string;
+  gender: Gender;
+  lookingFor: LookingFor;
   bio: string;
   interests: InterestKey[];
   photoSeed: string;
@@ -113,6 +123,7 @@ export type TransactionType =
   | 'streak_bonus'
   | 'referral_bonus'
   | 'reveal_interest' // spent coins to see who's curious about them
+  | 'top_placement' // spent coins to appear in the paid ТОП 100 (a pure sink — nobody is paid)
   | 'starter_bonus';
 
 export interface Transaction {
@@ -217,9 +228,24 @@ export interface AppNotification {
   read: boolean;
 }
 
+// A paid spot in the ТОП 100. One per user; buying again while active bumps
+// the person back to the top and restarts the clock.
+export interface TopPlacement {
+  userId: string;
+  startedAt: string;
+  expiresAt: string;
+  pricePaid: number;
+}
+
 export interface DiscoveryFilters {
   minAge: number;
   maxAge: number;
+  gender: Gender | null; // null = any
   city: string | null; // null = any city
   interests: InterestKey[]; // empty = any interest
+  onlyTop: boolean;
+  onlyCompatible: boolean;
+  onlyVerified: boolean;
+  onlyHot: boolean; // has at least one approved "горячий факт"
+  onlyFriendship: boolean;
 }

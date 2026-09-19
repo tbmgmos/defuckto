@@ -34,6 +34,7 @@ export function AddFactScreen({ navigation }: Props) {
   const [voiceResult, setVoiceResult] = useState<{ uri: string; durationSec: number } | null>(null);
   const [category, setCategory] = useState<FactCategory>('life');
   const [price, setPrice] = useState(10);
+  const [hot, setHot] = useState(false);
   const [publishing, setPublishing] = useState(false);
 
   const isVoice = factType === 'voice';
@@ -52,8 +53,12 @@ export function AddFactScreen({ navigation }: Props) {
         type: factType,
         audioUri: voiceResult?.uri,
         durationSec: voiceResult?.durationSec,
+        hot,
       });
-      showToast('Факт опубликован. Посмотрим, кому станет любопытно.', 'success');
+      showToast(
+        hot ? 'Горячий факт отправлен на модерацию. Другие увидят его после проверки.' : 'Факт опубликован. Посмотрим, кому станет любопытно.',
+        'success',
+      );
       navigation.goBack();
     } catch {
       showToast('Не получилось опубликовать факт', 'error');
@@ -121,6 +126,17 @@ export function AddFactScreen({ navigation }: Props) {
             <Chip key={p} label={String(p)} icon="ellipse" selected={price === p} onPress={() => setPrice(p)} />
           ))}
         </View>
+
+        <Text style={[typography.eyebrow, styles.sectionTitle]}>Тип</Text>
+        <View style={styles.chipsRow}>
+          <Chip label="Обычный" selected={!hot} onPress={() => setHot(false)} />
+          <Chip label="Горячий" icon="flame-outline" selected={hot} onPress={() => setHot(true)} />
+        </View>
+        {hot ? (
+          <Text style={styles.safetyHint}>
+            Горячий факт — про личное и откровенное, но без пошлости и чужих данных. Он отдельная кнопка на твоём профиле и виден другим только после проверки.
+          </Text>
+        ) : null}
 
         <Text style={[typography.eyebrow, styles.sectionTitle]}>Предпросмотр</Text>
         <View style={styles.previewCard}>

@@ -16,13 +16,13 @@ in-memory store and services are the seam a real backend will replace.
   mutate stores directly and hold no economy logic.
 - All money logic lives in `src/services`. Coins are **spent** only in
   `economyService` (`purchaseFact`, `purchasePhoto`, `askQuestion`,
-  `revealTeaser`). Never call `walletService.spendCoins` from anywhere else.
+  `revealTeaser`, `buyTopPlacement`). Never call `walletService.spendCoins` from anywhere else.
   Coins are **earned** through `walletService.earnCoins` from `economyService`
   (seller share), `questService`, `simulationService`, and the streak/referral
   bonuses in `stores/actions.ts`. Add a new earning path only on purpose.
 - Prices, quotas and caps are named constants in the service that owns them
   (`QUESTION_PRICE`, `FREE_QUESTIONS_PER_DAY`, `FREE_SPARKS_PER_DAY`,
-  `SELLER_SHARE`). Do not inline numbers in screens.
+  `SELLER_SHARE`, `TOP_PLACEMENT_PRICE`). Do not inline numbers in screens.
 - UI should depend on `src/models`, not on `src/data/*` mock shapes. Some
   screens still import `data/users`, `data/factCategories`, `data/interests`;
   do not add new ones.
@@ -40,6 +40,12 @@ in-memory store and services are the seam a real backend will replace.
 - **Free sparks are capped per day**, otherwise sparking everyone is rational
   and the signal means nothing.
 - Every fact carries `moderationStatus`. Keep it on new content types.
+  "Горячие" facts (`hot`) start `pending` and are shown to others only when
+  `approved`.
+- **The «Написать» button is never gated** by opened facts, coins or state.
+- **ТОП 100 is a flat-price sink, not an auction.** Position = when you bought
+  (`topService.rankTop`), never how much you paid. Coins are burned, nobody is
+  paid.
 
 ## UI conventions
 

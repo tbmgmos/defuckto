@@ -17,6 +17,7 @@ import {
   Quest,
   ReferralInfo,
   Report,
+  TopPlacement,
   Transaction,
   User,
   Wallet,
@@ -51,6 +52,8 @@ export const db = {
   notifications: [] as AppNotification[],
   referrals: new Map<string, ReferralInfo>(),
   isPremium: new Map<string, boolean>(),
+  // One paid ТОП 100 spot per user (see economyService.buyTopPlacement / topService).
+  topPlacements: new Map<string, TopPlacement>(),
   // Resets when `date` no longer matches today — see economyService's free-question quota.
   dailyQuestionUsage: new Map<string, { date: string; count: number }>(),
   // Free, money-free "I'm interested" signal (see interestService.sendSpark) — feeds
@@ -76,6 +79,27 @@ db.transactions.push({
   amount: STARTER_BALANCE,
   description: 'Добро пожаловать в DEFUCKTO',
   createdAt: isoDaysAgo(1),
+});
+
+// Seed the ТОП 100 with most of the mock users, bought at staggered times so
+// there is a visible ranking (most recent placement first) on first launch.
+export const TOP_PLACEMENT_HOURS = 24;
+[
+  ['u_masha', 1],
+  ['u_sofia', 3],
+  ['u_olya', 5],
+  ['u_alex', 8],
+  ['u_timur', 11],
+  ['u_ira', 14],
+  ['u_lena', 18],
+].forEach(([userId, hoursAgo]) => {
+  const startedAt = isoHoursAgo(hoursAgo as number);
+  db.topPlacements.set(userId as string, {
+    userId: userId as string,
+    startedAt,
+    expiresAt: new Date(new Date(startedAt).getTime() + TOP_PLACEMENT_HOURS * 3_600_000).toISOString(),
+    pricePaid: 50,
+  });
 });
 
 // A little seeded history so the wallet screen feels alive on first launch.

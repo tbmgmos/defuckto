@@ -35,6 +35,7 @@ import { useTeasersStore } from './useTeasersStore';
 import { usePremiumStore } from './usePremiumStore';
 import { useSparkStore } from './useSparkStore';
 import { useNotificationsStore } from './useNotificationsStore';
+import { useTopStore } from './useTopStore';
 import { Fact, ProfilePhoto } from '../models';
 
 export async function bootstrapApp(): Promise<void> {
@@ -51,6 +52,7 @@ export async function bootstrapApp(): Promise<void> {
     usePremiumStore.getState().load(),
     useSparkStore.getState().load(),
     useNotificationsStore.getState().load(),
+    useTopStore.getState().load(),
   ]);
 }
 
@@ -176,6 +178,16 @@ export async function openConversationWith(otherUserId: string): Promise<string>
   const conversation = await chatService.openConversation(CURRENT_USER_ID, otherUserId);
   useChatStore.getState().upsertConversation(conversation);
   return conversation.id;
+}
+
+/** Buys or renews the current user's ТОП 100 spot — see economyService.buyTopPlacement. */
+export async function buyTopPlacement(): Promise<void> {
+  const { placement } = await economyService.buyTopPlacement(CURRENT_USER_ID);
+  await Promise.all([useWalletStore.getState().load(), useTopStore.getState().load()]);
+  await touchDailyStreak();
+  const message = `Ты в ТОП 100 · −${placement.pricePaid}`;
+  useToastStore.getState().show(message, 'success');
+  useNotificationsStore.getState().push('trophy-outline', message);
 }
 
 export async function publishFact(input: CreateFactInput): Promise<Fact> {

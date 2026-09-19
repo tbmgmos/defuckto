@@ -3,6 +3,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { RootStackParamList } from './types';
 import { TabNavigator } from './TabNavigator';
 import { OnboardingScreen } from '../screens/OnboardingScreen';
+import { MyProfileScreen } from '../screens/MyProfileScreen';
 import { UserProfileScreen } from '../screens/UserProfileScreen';
 import { ChatScreen } from '../screens/ChatScreen';
 import { AddFactScreen } from '../screens/AddFactScreen';
@@ -26,6 +27,7 @@ export function RootNavigator() {
     >
       <Stack.Screen name="Onboarding" component={OnboardingScreen} />
       <Stack.Screen name="MainTabs" component={TabNavigator} />
+      <Stack.Screen name="Profile" component={MyProfileScreen} />
       <Stack.Screen name="UserProfile" component={UserProfileScreen} />
       <Stack.Screen name="Chat" component={ChatScreen} />
       <Stack.Screen

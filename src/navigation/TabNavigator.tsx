@@ -5,30 +5,34 @@ import { TabParamList } from './types';
 import { DiscoveryScreen } from '../screens/DiscoveryScreen';
 import { FactsFeedScreen } from '../screens/FactsFeedScreen';
 import { MessagesListScreen } from '../screens/MessagesListScreen';
-import { MyProfileScreen } from '../screens/MyProfileScreen';
+import { TopScreen } from '../screens/TopScreen';
+import { AppHeader } from '../components/AppHeader';
+import { WelcomeTour } from '../components/WelcomeTour';
 import { colors } from '../theme';
 
 const Tab = createBottomTabNavigator<TabParamList>();
 
 const ICONS: Record<keyof TabParamList, { active: keyof typeof Ionicons.glyphMap; inactive: keyof typeof Ionicons.glyphMap }> = {
-  Discovery: { active: 'flame', inactive: 'flame-outline' },
+  Discovery: { active: 'search', inactive: 'search-outline' },
   FactsFeed: { active: 'bulb', inactive: 'bulb-outline' },
+  Top: { active: 'trophy', inactive: 'trophy-outline' },
   Messages: { active: 'chatbubble-ellipses', inactive: 'chatbubble-ellipses-outline' },
-  Profile: { active: 'person-circle', inactive: 'person-circle-outline' },
 };
 
 const LABELS: Record<keyof TabParamList, string> = {
-  Discovery: 'Знакомства',
+  Discovery: 'Поиск',
   FactsFeed: 'Факты',
+  Top: 'ТОП 100',
   Messages: 'Сообщения',
-  Profile: 'Профиль',
 };
 
 export function TabNavigator() {
   return (
+    <>
     <Tab.Navigator
+      initialRouteName="Top"
       screenOptions={({ route }) => ({
-        headerShown: false,
+        header: () => <AppHeader />,
         tabBarActiveTintColor: colors.accent,
         tabBarInactiveTintColor: colors.textTertiary,
         tabBarStyle: {
@@ -46,8 +50,10 @@ export function TabNavigator() {
     >
       <Tab.Screen name="Discovery" component={DiscoveryScreen} />
       <Tab.Screen name="FactsFeed" component={FactsFeedScreen} />
+      <Tab.Screen name="Top" component={TopScreen} />
       <Tab.Screen name="Messages" component={MessagesListScreen} />
-      <Tab.Screen name="Profile" component={MyProfileScreen} />
     </Tab.Navigator>
+    <WelcomeTour />
+    </>
   );
 }

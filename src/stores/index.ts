@@ -12,4 +12,5 @@ export * from './useStreakStore';
 export * from './useTeasersStore';
 export * from './useFiltersStore';
 export * from './usePremiumStore';
+export * from './useTopStore';
 export * from './actions';

@@ -14,6 +14,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { RootStackParamList } from '../navigation/types';
 import { Avatar } from '../components/Avatar';
+import { UserBadges } from '../components/UserBadges';
 import { useChatStore } from '../stores/useChatStore';
 import { useToastStore } from '../stores/useToastStore';
 import { sendChatMessage } from '../stores/actions';
@@ -67,8 +68,23 @@ export function ChatScreen({ route, navigation }: Props) {
         <Pressable onPress={navigation.goBack} hitSlop={10} accessibilityRole="button" accessibilityLabel="Назад" style={styles.backButton}>
           <Ionicons name="chevron-back" size={22} color={colors.textPrimary} />
         </Pressable>
-        <Avatar seed={other.photoSeed} name={other.name} size={36} />
-        <Text style={typography.headline}>{other.name}</Text>
+        <Pressable
+          onPress={() => navigation.navigate('UserProfile', { userId: other.id })}
+          style={styles.profileLink}
+          accessibilityRole="button"
+          accessibilityLabel={`Профиль: ${other.name}`}
+        >
+          <Avatar seed={other.photoSeed} name={other.name} photoUri={other.photoUri} size={44} />
+          <View style={styles.profileText}>
+            <View style={styles.nameRow}>
+              <Text style={typography.headline}>{other.name}</Text>
+              <UserBadges user={other} size={14} />
+            </View>
+            <Text style={styles.meta}>
+              {other.age}, {other.city}
+            </Text>
+          </View>
+        </Pressable>
       </View>
 
       <FlatList
@@ -127,6 +143,25 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.sm,
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
+  },
+  profileLink: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  profileText: {
+    flex: 1,
+  },
+  nameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+  },
+  meta: {
+    ...typography.caption,
+    textTransform: 'none',
+    letterSpacing: 0,
   },
   backButton: {
     width: touchTarget.min,

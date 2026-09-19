@@ -5,24 +5,21 @@ import { CompositeScreenProps, useFocusEffect } from '@react-navigation/native';
 import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 import { RootStackParamList, TabParamList } from '../navigation/types';
-import { ScreenHeader } from '../components/ScreenHeader';
 import { Chip } from '../components/Chip';
 import { DiscoveryCard } from '../components/DiscoveryCard';
-import { DailyQuests } from '../components/DailyQuests';
 import { DailyFactBanner } from '../components/DailyFactBanner';
 import { FilterSheet } from '../components/FilterSheet';
 import { useUsersStore } from '../stores/useUsersStore';
 import { useFactsStore } from '../stores/useFactsStore';
-import { useQuestsStore } from '../stores/useQuestsStore';
 import { useModerationStore } from '../stores/useModerationStore';
-import { useStreakStore } from '../stores/useStreakStore';
+import { useTopStore } from '../stores/useTopStore';
 import { useFiltersStore } from '../stores/useFiltersStore';
 import { useSparkStore } from '../stores/useSparkStore';
 import { useToastStore } from '../stores/useToastStore';
-import { DISCOVERY_META } from '../data/discoveryMeta';
 import { dailyFactService } from '../services/dailyFactService';
+import { DiscoveryTab, activeFilterCount, applyFilters, orderUsers } from '../services/discoveryService';
 import { compatibilityScore } from '../utils/compatibility';
-import { colors, spacing, touchTarget } from '../theme';
+import { colors, radius, spacing, touchTarget, typography } from '../theme';
 import { Fact, User } from '../models';
 import { getUserById } from '../data/users';
 import { sendSpark } from '../stores/actions';
@@ -32,26 +29,30 @@ type Props = CompositeScreenProps<
   NativeStackScreenProps<RootStackParamList>
 >;
 
-const FILTERS = ['Для тебя', 'Новые', 'Рядом', 'Популярные'] as const;
-type Filter = (typeof FILTERS)[number];
+const TABS: { key: DiscoveryTab; label: string }[] = [
+  { key: 'foryou', label: 'Для тебя' },
+  { key: 'new', label: 'Новые' },
+  { key: 'near', label: 'Рядом' },
+];
 
 export function DiscoveryScreen({ navigation }: Props) {
   const users = useUsersStore((s) => s.users);
   const currentUser = useUsersStore((s) => s.currentUser);
   const facts = useFactsStore((s) => s.facts);
   const unlockedIds = useFactsStore((s) => s.unlockedIds);
-  const quests = useQuestsStore((s) => s.quests);
   const blockedIds = useModerationStore((s) => s.blockedIds);
-  const streak = useStreakStore((s) => s.streak);
+  const topPlacements = useTopStore((s) => s.placements);
   const filters = useFiltersStore((s) => s.filters);
   const sparkedIds = useSparkStore((s) => s.sparkedIds);
   const setAgeRange = useFiltersStore((s) => s.setAgeRange);
   const setCity = useFiltersStore((s) => s.setCity);
   const toggleInterest = useFiltersStore((s) => s.toggleInterest);
+  const setGender = useFiltersStore((s) => s.setGender);
+  const toggleFlag = useFiltersStore((s) => s.toggleFlag);
   const resetFilters = useFiltersStore((s) => s.reset);
   const showToast = useToastStore((s) => s.show);
 
-  const [filter, setFilter] = useState<Filter>('Для тебя');
+  const [tab, setTab] = useState<DiscoveryTab>('foryou');
   const [filterSheetOpen, setFilterSheetOpen] = useState(false);
   const [dailyFact, setDailyFact] = useState<Fact | null>(null);
 
@@ -69,7 +70,7 @@ export function DiscoveryScreen({ navigation }: Props) {
 
   useFocusEffect(
     useCallback(() => {
-      useStreakStore.getState().load();
+      useTopStore.getState().load();
     }, []),
   );
 
@@ -83,33 +84,19 @@ export function DiscoveryScreen({ navigation }: Props) {
 
   const cities = useMemo(() => Array.from(new Set(users.map((u) => u.city))).sort(), [users]);
 
-  const visibleUsers = useMemo(() => {
-    return users.filter((u) => {
-      if (blockedIds.has(u.id)) return false;
-      if (u.age < filters.minAge || u.age > filters.maxAge) return false;
-      if (filters.city && u.city !== filters.city) return false;
-      if (filters.interests.length > 0 && !filters.interests.some((i) => u.interests.includes(i))) return false;
-      return true;
-    });
-  }, [users, blockedIds, filters]);
+  const topIds = useMemo(() => new Set(topPlacements.map((p) => p.userId)), [topPlacements]);
+  const hotAuthorIds = useMemo(
+    () => new Set(facts.filter((f) => f.hot && f.moderationStatus === 'approved').map((f) => f.authorId)),
+    [facts],
+  );
 
   const orderedUsers = useMemo(() => {
-    const list = [...visibleUsers];
-    if (filter === 'Новые') {
-      list.sort((a, b) => (DISCOVERY_META[a.id]?.joinedDaysAgo ?? 99) - (DISCOVERY_META[b.id]?.joinedDaysAgo ?? 99));
-    } else if (filter === 'Рядом') {
-      list.sort((a, b) => (DISCOVERY_META[a.id]?.distanceKm ?? 9999) - (DISCOVERY_META[b.id]?.distanceKm ?? 9999));
-    } else if (filter === 'Популярные') {
-      list.sort((a, b) => (unlockedCountByAuthor.get(b.id) ?? 0) - (unlockedCountByAuthor.get(a.id) ?? 0));
-    } else if (currentUser) {
-      list.sort((a, b) => compatibilityScore(currentUser, b) - compatibilityScore(currentUser, a));
-    }
-    return list;
-  }, [visibleUsers, filter, unlockedCountByAuthor, currentUser]);
+    const visible = applyFilters(users, filters, { viewer: currentUser, blockedIds, topIds, hotAuthorIds });
+    return orderUsers(visible, tab, currentUser);
+  }, [users, filters, currentUser, blockedIds, topIds, hotAuthorIds, tab]);
 
   const dailyFactAuthor: User | null = dailyFact ? getUserById(dailyFact.authorId) ?? null : null;
-  const activeFilterCount =
-    (filters.city ? 1 : 0) + filters.interests.length + (filters.minAge !== 18 || filters.maxAge !== 45 ? 1 : 0);
+  const filterCount = activeFilterCount(filters);
 
   return (
     <View style={styles.root}>
@@ -118,35 +105,29 @@ export function DiscoveryScreen({ navigation }: Props) {
         keyExtractor={(item) => item.id}
         ListHeaderComponent={
           <>
-            <ScreenHeader
-              title="Знакомства"
-              onBalancePress={() => navigation.navigate('Wallet')}
-              right={
-                <Pressable
-                  onPress={() => setFilterSheetOpen(true)}
-                  style={styles.filterButton}
-                  accessibilityRole="button"
-                  accessibilityLabel="Фильтры"
-                >
-                  <Ionicons name="options-outline" size={20} color={colors.textPrimary} />
-                  {activeFilterCount > 0 ? (
-                    <View style={styles.filterBadge}>
-                      <Text style={styles.filterBadgeText}>{activeFilterCount}</Text>
-                    </View>
-                  ) : null}
-                </Pressable>
-              }
-            />
+            <Pressable
+              onPress={() => setFilterSheetOpen(true)}
+              style={styles.filterButton}
+              accessibilityRole="button"
+              accessibilityLabel={filterCount > 0 ? `Фильтр, включено: ${filterCount}` : 'Фильтр'}
+            >
+              <Text style={styles.filterLabel}>ФИЛЬТР</Text>
+              <Ionicons name="options-outline" size={18} color={colors.textPrimary} />
+              {filterCount > 0 ? (
+                <View style={styles.filterBadge}>
+                  <Text style={styles.filterBadgeText}>{filterCount}</Text>
+                </View>
+              ) : null}
+            </Pressable>
             <DailyFactBanner fact={dailyFact} author={dailyFactAuthor} />
-            <DailyQuests quests={quests} streak={streak} />
             <FlatList
               horizontal
-              data={FILTERS as unknown as Filter[]}
-              keyExtractor={(f) => f}
+              data={TABS}
+              keyExtractor={(t) => t.key}
               showsHorizontalScrollIndicator={false}
               contentContainerStyle={styles.filters}
               renderItem={({ item }) => (
-                <Chip label={item} selected={filter === item} onPress={() => setFilter(item)} />
+                <Chip label={item.label} selected={tab === item.key} onPress={() => setTab(item.key)} />
               )}
             />
           </>
@@ -176,8 +157,10 @@ export function DiscoveryScreen({ navigation }: Props) {
         cities={cities}
         onClose={() => setFilterSheetOpen(false)}
         onAgeChange={setAgeRange}
+        onGenderChange={setGender}
         onCityChange={setCity}
         onToggleInterest={toggleInterest}
+        onToggleFlag={toggleFlag}
         onReset={resetFilters}
       />
     </View>
@@ -197,19 +180,28 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.xxxl,
   },
   filterButton: {
-    width: touchTarget.min,
-    height: touchTarget.min,
-    borderRadius: touchTarget.min / 2,
+    minHeight: touchTarget.min,
+    marginHorizontal: spacing.lg,
+    marginBottom: spacing.md,
+    borderRadius: radius.md,
     backgroundColor: colors.surfaceAlt,
     borderWidth: 1,
     borderColor: colors.border,
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+    gap: spacing.xs,
+  },
+  filterLabel: {
+    ...typography.subhead,
+    color: colors.textPrimary,
+    fontWeight: '800',
+    letterSpacing: 0.4,
   },
   filterBadge: {
     position: 'absolute',
-    top: -2,
-    right: -2,
+    top: -6,
+    right: spacing.sm,
     width: 16,
     height: 16,
     borderRadius: 8,

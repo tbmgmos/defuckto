@@ -5,7 +5,7 @@ import { colors, spacing, typography } from '../theme';
 import { User } from '../models';
 import { PhotoHero } from './PhotoHero';
 import { Button } from './Button';
-import { VerifiedBadge } from './VerifiedBadge';
+import { UserBadges } from './UserBadges';
 import { CompatibilityTag } from './CompatibilityTag';
 import { interestLabel } from '../data/interests';
 
@@ -24,7 +24,7 @@ export function DiscoveryCard({ user, unlockedFactsCount, sharedInterests, spark
       <PhotoHero seed={user.photoSeed} name={user.name} height={420}>
         <View style={styles.nameRow}>
           <Text style={styles.name}>{user.name.toUpperCase()}</Text>
-          {user.verified ? <VerifiedBadge size={20} /> : null}
+          <UserBadges user={user} size={20} />
         </View>
         <Text style={styles.meta}>
           {user.age} · {user.city}

@@ -3,13 +3,14 @@ import { NavigatorScreenParams } from '@react-navigation/native';
 export type TabParamList = {
   Discovery: undefined;
   FactsFeed: undefined;
+  Top: undefined;
   Messages: undefined;
-  Profile: undefined;
 };
 
 export type RootStackParamList = {
   Onboarding: undefined;
   MainTabs: NavigatorScreenParams<TabParamList>;
+  Profile: undefined;
   UserProfile: { userId: string };
   Chat: { conversationId: string; draft?: string };
   AddFact: undefined;

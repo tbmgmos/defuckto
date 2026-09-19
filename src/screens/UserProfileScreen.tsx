@@ -7,13 +7,13 @@ import { RootStackParamList } from '../navigation/types';
 import { colors, spacing, typography } from '../theme';
 import { PhotoCarousel } from '../components/PhotoCarousel';
 import { FactCard } from '../components/FactCard';
-import { Button } from '../components/Button';
+import { FactActionButton } from '../components/FactActionButton';
 import { PurchaseFactSheet } from '../components/PurchaseFactSheet';
 import { PurchasePhotoSheet } from '../components/PurchasePhotoSheet';
 import { AskQuestionSheet } from '../components/AskQuestionSheet';
 import { ReportBlockSheet } from '../components/ReportBlockSheet';
 import { Badge } from '../components/Badge';
-import { VerifiedBadge } from '../components/VerifiedBadge';
+import { UserBadges } from '../components/UserBadges';
 import { CompatibilityTag } from '../components/CompatibilityTag';
 import { getUserById } from '../data/users';
 import { useFactsStore } from '../stores/useFactsStore';
@@ -24,7 +24,8 @@ import { askQuestion, blockUser, exploreProfile, openConversationWith, purchaseF
 import { interestLabel } from '../data/interests';
 import { compatibilityScore } from '../utils/compatibility';
 import { Fact, ProfilePhoto } from '../models';
-import { economyService } from '../services';
+import { economyService, planFactActions } from '../services';
+import { computeCurrentPrice } from '../services/economyService';
 import { CURRENT_USER_ID } from '../data/users';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'UserProfile'>;
@@ -48,6 +49,8 @@ export function UserProfileScreen({ route, navigation }: Props) {
   const [purchasingPhoto, setPurchasingPhoto] = useState(false);
   const [questionTarget, setQuestionTarget] = useState<Fact | null>(null);
   const [asking, setAsking] = useState(false);
+  // Facts revealed on this visit, in the order the viewer asked for them.
+  const [shownIds, setShownIds] = useState<string[]>([]);
   const [revealFlow, setRevealFlow] = useState<{ factId: string; stage: RevealStage } | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [freeQuestionsRemaining, setFreeQuestionsRemaining] = useState(0);
@@ -60,13 +63,12 @@ export function UserProfileScreen({ route, navigation }: Props) {
     exploreProfile(userId);
   }, [userId]);
 
-  const sortedFacts = useMemo(
-    () =>
-      allFacts
-        .filter((f) => f.authorId === userId)
-        .sort((a, b) => (a.price === 0 ? -1 : b.price === 0 ? 1 : a.price - b.price)),
-    [allFacts, userId],
+  const userFacts = useMemo(() => allFacts.filter((f) => f.authorId === userId), [allFacts, userId]);
+  const shownFacts = useMemo(
+    () => shownIds.map((id) => userFacts.find((f) => f.id === id)).filter((f): f is Fact => !!f),
+    [shownIds, userFacts],
   );
+  const actions = useMemo(() => planFactActions(userFacts, unlockedIds, shownIds), [userFacts, unlockedIds, shownIds]);
 
   const photos = useMemo(() => allPhotos.filter((p) => p.ownerId === userId), [allPhotos, userId]);
   const shared = currentUser && user ? compatibilityScore(currentUser, user) : 0;
@@ -86,6 +88,7 @@ export function UserProfileScreen({ route, navigation }: Props) {
       const outcome = await purchaseFact(purchaseTarget);
       setPurchaseTarget(null);
       showToast(`Факт открыт · −${outcome.pricePaid}`, 'success');
+      setShownIds((ids) => [...ids, outcome.fact.id]);
       setRevealFlow({ factId: outcome.fact.id, stage: 'revealed' });
     } catch (e) {
       showToast(e instanceof Error ? e.message : 'Не получилось открыть факт', 'error');
@@ -137,8 +140,21 @@ export function UserProfileScreen({ route, navigation }: Props) {
     navigation.navigate('Chat', { conversationId });
   };
 
+  // A fact that is already free or already bought is just shown; a locked one asks first.
+  const openFact = (fact: Fact) => {
+    if (fact.price === 0 || unlockedIds.has(fact.id)) {
+      setShownIds((ids) => (ids.includes(fact.id) ? ids : [...ids, fact.id]));
+    } else {
+      setPurchaseTarget(fact);
+    }
+  };
+
+  const showOpenedFacts = () => {
+    setShownIds((ids) => [...ids, ...actions.opened.map((f) => f.id)]);
+  };
+
   const handleReportFact = async (reason: string) => {
-    const target = sortedFacts[0];
+    const target = shownFacts[shownFacts.length - 1] ?? userFacts[0];
     if (!target) return;
     await reportFact(target.id, reason);
   };
@@ -174,7 +190,7 @@ export function UserProfileScreen({ route, navigation }: Props) {
         <View style={styles.body}>
           <View style={styles.nameRow}>
             <Text style={typography.title1}>{user.name}</Text>
-            {user.verified ? <VerifiedBadge /> : null}
+            <UserBadges user={user} size={18} />
           </View>
           <Text style={styles.meta}>
             {user.age} · {user.city}
@@ -187,21 +203,13 @@ export function UserProfileScreen({ route, navigation }: Props) {
           </View>
           <Text style={[typography.body, styles.bio]}>{user.bio}</Text>
 
-          <Button label="Написать" onPress={handleWrite} variant="secondary" size="md" style={styles.writeButton} />
-
           <Text style={[typography.eyebrow, styles.sectionTitle]}>Факты</Text>
           <View style={styles.factsList}>
-            {sortedFacts.map((fact) => {
-              const locked = !unlockedIds.has(fact.id);
+            {shownFacts.map((fact) => {
               const isFlow = revealFlow?.factId === fact.id;
               return (
                 <View key={fact.id}>
-                  <FactCard
-                    fact={fact}
-                    locked={locked}
-                    unlocking={purchasing && purchaseTarget?.id === fact.id}
-                    onUnlock={() => setPurchaseTarget(fact)}
-                  />
+                  <FactCard fact={fact} locked={false} onUnlock={() => undefined} />
                   {isFlow ? (
                     <View style={styles.reactionRow}>
                       {revealFlow?.stage === 'revealed' ? (
@@ -228,6 +236,40 @@ export function UserProfileScreen({ route, navigation }: Props) {
                 </View>
               );
             })}
+
+            {shownFacts.length === 0 ? (
+              actions.free || actions.paid ? (
+                <FactActionButton label="открыть факт" tone="go" onPress={() => openFact((actions.free ?? actions.paid) as Fact)} />
+              ) : actions.hot ? null : (
+                <Text style={styles.noFacts}>У {user.name} пока нет фактов.</Text>
+              )
+            ) : (
+              <>
+                {actions.free ? <FactActionButton label="еще факт" tone="go" onPress={() => openFact(actions.free as Fact)} /> : null}
+                {actions.paid ? (
+                  <FactActionButton
+                    label="еще факт"
+                    tone="go"
+                    price={computeCurrentPrice(actions.paid.price, actions.paid.unlockCount)}
+                    onPress={() => openFact(actions.paid as Fact)}
+                  />
+                ) : null}
+              </>
+            )}
+            {actions.hot ? (
+              <FactActionButton
+                label="горячий факт"
+                tone="hot"
+                price={unlockedIds.has(actions.hot.id) ? undefined : computeCurrentPrice(actions.hot.price, actions.hot.unlockCount)}
+                icon="flame"
+                onPress={() => openFact(actions.hot as Fact)}
+              />
+            ) : null}
+            {actions.opened.length > 0 ? (
+              <FactActionButton label="открытый факт" tone="muted" onPress={showOpenedFacts} />
+            ) : null}
+            {/* Never gated: writing to someone is free whatever has or hasn't been opened. */}
+            <FactActionButton label="НАПИСАТЬ" tone="go" icon="chatbubble-ellipses" onPress={handleWrite} />
           </View>
         </View>
       </ScrollView>
@@ -323,9 +365,9 @@ const styles = StyleSheet.create({
     marginTop: spacing.md,
     color: colors.textSecondary,
   },
-  writeButton: {
-    marginTop: spacing.md,
-    alignSelf: 'flex-start',
+  noFacts: {
+    ...typography.subhead,
+    color: colors.textTertiary,
   },
   sectionTitle: {
     marginTop: spacing.xl,

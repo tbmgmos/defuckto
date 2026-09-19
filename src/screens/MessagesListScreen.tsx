@@ -84,7 +84,7 @@ export function MessagesListScreen({ navigation }: Props) {
         keyExtractor={(item) => item.id}
         ListHeaderComponent={
           <>
-            <ScreenHeader title="Сообщения" onBalancePress={() => navigation.navigate('Wallet')} />
+            <ScreenHeader title="Сообщения" />
             {teasers.length > 0 ? (
               <View style={styles.section}>
                 <Text style={[typography.eyebrow, styles.sectionTitle]}>Кто-то заинтересовался</Text>

@@ -2,19 +2,17 @@ import React, { useCallback, useMemo, useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { CompositeScreenProps } from '@react-navigation/native';
-import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
-import { RootStackParamList, TabParamList } from '../navigation/types';
+import { RootStackParamList } from '../navigation/types';
 import { PhotoHero } from '../components/PhotoHero';
 import { Badge } from '../components/Badge';
 import { StatTile } from '../components/StatTile';
 import { Button } from '../components/Button';
 import { CoinBalance } from '../components/CoinBalance';
 import { CoinGlyph } from '../components/CoinGlyph';
-import { VerifiedBadge } from '../components/VerifiedBadge';
+import { UserBadges } from '../components/UserBadges';
 import { VerificationSheet } from '../components/VerificationSheet';
 import { PaywallSheet } from '../components/PaywallSheet';
 import { ReferralSheet } from '../components/ReferralSheet';
@@ -34,10 +32,7 @@ import { colors, radius, spacing, typography } from '../theme';
 import { computeCurrentPrice } from '../services/economyService';
 import { ReferralInfo } from '../models';
 
-type Props = CompositeScreenProps<
-  BottomTabScreenProps<TabParamList, 'Profile'>,
-  NativeStackScreenProps<RootStackParamList>
->;
+type Props = NativeStackScreenProps<RootStackParamList, 'Profile'>;
 
 export function MyProfileScreen({ navigation }: Props) {
   const insets = useSafeAreaInsets();
@@ -110,6 +105,15 @@ export function MyProfileScreen({ navigation }: Props) {
         borderRadius={0}
         fillOverlay={
           <>
+            <Pressable
+              onPress={navigation.goBack}
+              style={[styles.backButton, { top: insets.top + 12 }]}
+              accessibilityRole="button"
+              accessibilityLabel="Назад"
+              hitSlop={10}
+            >
+              <Ionicons name="chevron-back" size={22} color={colors.textPrimary} />
+            </Pressable>
             <View style={[styles.balanceChip, { top: insets.top + 12 }]}>
               <CoinBalance balance={balance} size="sm" onPress={() => navigation.navigate('Wallet')} />
             </View>
@@ -129,7 +133,7 @@ export function MyProfileScreen({ navigation }: Props) {
       <View style={styles.body}>
         <View style={styles.nameRow}>
           <Text style={typography.title1}>{currentUser.name}</Text>
-          {currentUser.verified ? <VerifiedBadge /> : null}
+          <UserBadges user={currentUser} size={18} />
         </View>
         <Text style={styles.meta}>
           {currentUser.age} · {currentUser.city}
@@ -189,6 +193,15 @@ export function MyProfileScreen({ navigation }: Props) {
               <View key={fact.id} style={styles.factRow}>
                 <Ionicons name={rowIcon} size={18} color={colors.textSecondary} />
                 <Text style={[typography.body, styles.factText]}>{fact.text}</Text>
+                {fact.hot ? (
+                  <Ionicons
+                    name="flame"
+                    size={15}
+                    color={colors.danger}
+                    accessibilityLabel={fact.moderationStatus === 'pending' ? 'Горячий факт, на модерации' : 'Горячий факт'}
+                  />
+                ) : null}
+                {fact.moderationStatus === 'pending' ? <Badge label="на модерации" tone="neutral" /> : null}
                 {fact.price > 0 ? (
                   <Text style={styles.factPrice}>
                     {price} <CoinGlyph size={12} color={colors.accentText} />
@@ -251,6 +264,16 @@ const styles = StyleSheet.create({
   },
   content: {
     paddingBottom: spacing.xxxl,
+  },
+  backButton: {
+    position: 'absolute',
+    left: spacing.lg,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: colors.overlayScrim,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   balanceChip: {
     position: 'absolute',

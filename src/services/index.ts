@@ -18,3 +18,5 @@ export * from './teaserService';
 export * from './leaderboardService';
 export * from './premiumService';
 export * from './dailyFactService';
+export * from './topService';
+export * from './discoveryService';

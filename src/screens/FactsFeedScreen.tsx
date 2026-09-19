@@ -68,7 +68,6 @@ export function FactsFeedScreen({ navigation }: Props) {
             <ScreenHeader
               title="Интересное"
               subtitle="Люди рассказали о себе то, чего не увидишь в профиле."
-              onBalancePress={() => navigation.navigate('Wallet')}
               right={
                 <Pressable
                   onPress={() => navigation.navigate('GuessGame')}

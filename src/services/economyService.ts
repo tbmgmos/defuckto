@@ -3,17 +3,23 @@
 // earnCoins() directly — so the split between buyer and seller, and the
 // price-growth curve, live in exactly one place.
 
-import { db, delay, SELLER_SHARE } from './localDatabase';
+import { db, delay, SELLER_SHARE, TOP_PLACEMENT_HOURS } from './localDatabase';
 import { walletService } from './walletService';
 import { factService } from './factService';
 import { photoService } from './photoService';
 import { chatService } from './chatService';
-import { Fact, FactPurchase, PhotoPurchase, ProfilePhoto, TransactionType, Wallet } from '../models';
+import { Fact, FactPurchase, PhotoPurchase, ProfilePhoto, TopPlacement, TransactionType, Wallet } from '../models';
 import { createId } from '../utils/id';
 import { isoNow, localDayKey } from '../utils/date';
 
 export const QUESTION_PRICE = 15;
 export const REVEAL_INTEREST_PRICE = 12;
+
+// One flat price for a ТОП 100 spot, deliberately not an auction: a fixed cost
+// keeps the ranking from turning into "whoever pays most always sits on top".
+// Position is set by when you bought (see topService.rankTop), and the coins
+// are a pure sink — nobody is paid out.
+export const TOP_PLACEMENT_PRICE = 50;
 
 // Everyone gets a few questions a day for free — paying to unlock content is
 // one thing, paying just to be allowed to speak to someone is the pattern
@@ -240,6 +246,29 @@ export const economyService = {
     }
 
     return delay({ unlockedFactIds, unlockedPhotoIds }, 0);
+  },
+
+  /**
+   * Buys (or renews) a ТОП 100 spot for TOP_PLACEMENT_HOURS. Buying while
+   * already active restarts the clock and moves the person back to the top —
+   * it never stacks extra days.
+   */
+  async buyTopPlacement(userId: string): Promise<{ wallet: Wallet; placement: TopPlacement }> {
+    const wallet = await walletService.spendCoins(
+      userId,
+      TOP_PLACEMENT_PRICE,
+      'Размещение в ТОП 100',
+      'top_placement',
+    );
+    const startedAt = isoNow();
+    const placement: TopPlacement = {
+      userId,
+      startedAt,
+      expiresAt: new Date(Date.now() + TOP_PLACEMENT_HOURS * 3_600_000).toISOString(),
+      pricePaid: TOP_PLACEMENT_PRICE,
+    };
+    db.topPlacements.set(userId, placement);
+    return delay({ wallet, placement: { ...placement } });
   },
 
   /** Spend coins to learn who's behind an interest teaser (see teaserService). */
