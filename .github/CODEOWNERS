@@ -1,0 +1,17 @@
+# Money logic: a change here moves coins or changes who can talk to whom.
+/src/services/economyService.ts   @tbmgmos
+/src/services/walletService.ts    @tbmgmos
+/src/services/interestService.ts  @tbmgmos
+/src/services/questService.ts     @tbmgmos
+/src/stores/actions.ts            @tbmgmos
+
+# Anything that automates, builds or ships the app, or steers Claude.
+/.github/                         @tbmgmos
+/.claude/                         @tbmgmos
+/AGENTS.md                        @tbmgmos
+/deploy/                          @tbmgmos
+/package.json                     @tbmgmos
+/package-lock.json                @tbmgmos
+/app.json                         @tbmgmos
+/app.config.js                    @tbmgmos
+/eas.json                         @tbmgmos

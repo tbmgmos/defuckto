@@ -1,0 +1,34 @@
+name: Изменение экономики
+description: Цены, лимиты, награды, правила монет
+labels: [economy]
+body:
+  - type: textarea
+    id: change
+    attributes:
+      label: Что меняем
+      description: Какая цена, лимит или правило и на что
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: Зачем
+      description: Какую проблему решает и почему это не ухудшит опыт пользователей
+    validations:
+      required: true
+  - type: checkboxes
+    id: rules
+    attributes:
+      label: Правила продукта
+      options:
+        - label: Общение не закрывается платой (нет pay-to-talk)
+          required: true
+        - label: Автор не получает выгоду от размытых фактов (рост цены остаётся мягким)
+          required: true
+        - label: Бесплатные сигналы (искры и т. п.) остаются с дневным лимитом
+          required: true
+  - type: textarea
+    id: tests
+    attributes:
+      label: Как проверим
+      description: Какие тесты в `src/services/__tests__` добавим или поменяем
