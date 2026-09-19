@@ -1,0 +1,35 @@
+name: Баг
+description: Что-то работает не так, как должно
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: Что происходит
+      description: Что ты видишь и что ожидал увидеть
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Как воспроизвести
+      placeholder: |
+        1. Открыть ...
+        2. Нажать ...
+    validations:
+      required: true
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Где
+      options: [Web, Android, iOS, Не знаю]
+    validations:
+      required: true
+  - type: textarea
+    id: extra
+    attributes:
+      label: Скриншот или текст ошибки
+  - type: markdown
+    attributes:
+      value: |
+        Не вставляй сюда пароли, токены и личные данные пользователей.

@@ -1,0 +1,21 @@
+name: Идея
+description: Новая фича или улучшение
+labels: [idea]
+body:
+  - type: textarea
+    id: idea
+    attributes:
+      label: Что предлагаем
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: Какую проблему решает
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: Минимальная версия
+      description: Что достаточно сделать, чтобы проверить идею
