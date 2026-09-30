@@ -1,50 +1,52 @@
-// Monochrome graphite base + a single provocative accent.
-// Everything else derives from this file — never hardcode a color in a screen.
+// Warm-black base + one red accent, tuned to the "dark stage, vivid photos" look:
+// the interface stays quiet so faces carry the colour. Everything else derives
+// from this file — never hardcode a color in a screen.
 export const colors = {
-  // Base
-  bg: '#0A0A0B',
-  bgElevated: '#131315',
-  surface: '#18181B',
-  surfaceAlt: '#202024',
-  border: '#2A2A2E',
-  borderStrong: '#38383D',
+  // Base — near-black with a warm (brown/olive) cast, never pure grey
+  bg: '#0C0A08',
+  bgElevated: '#14110E',
+  surface: '#1D1A16',
+  surfaceAlt: '#27231D',
+  border: '#302B25',
+  borderStrong: '#443D34',
 
   // Text
-  textPrimary: '#F5F3EE',
-  textSecondary: '#A5A3A0',
-  textTertiary: '#6E6C6A',
-  textInverse: '#0A0A0B',
+  textPrimary: '#F6F2EC',
+  textSecondary: '#B0AAA1',
+  textTertiary: '#928C83',
+  textInverse: '#0C0A08', // on light fills: white CTA, selected chip, lime/coral badges
+  onAccent: '#FFFFFF', // on the red accent: sent bubble, count badges, red buttons
 
-  // Accent — "flame". Used for CTAs, coins, active states, key highlights only.
-  accent: '#FF4A32',
-  accentPressed: '#E03D22',
-  accentMuted: 'rgba(255, 74, 50, 0.16)',
-  accentText: '#FF6A4E',
+  // Accent — "signal red". Likes, sparks, coins, active states, sent messages.
+  // #D63E3F is the reference red nudged just enough for 4.5:1 with white text.
+  accent: '#D63E3F',
+  accentPressed: '#BC3335',
+  accentMuted: 'rgba(214, 62, 63, 0.18)',
+  accentText: '#FF7B78',
 
-  // Semantic
-  success: '#3DDC84',
-  successMuted: 'rgba(61, 220, 132, 0.14)',
-  warning: '#F5B942',
-  danger: '#FF5C5C',
-  dangerMuted: 'rgba(255, 92, 92, 0.14)',
+  // Semantic. success doubles as the "online" lime.
+  success: '#CDF79B',
+  successMuted: 'rgba(205, 247, 155, 0.14)',
+  warning: '#F2B84B',
+  danger: '#FF8577',
+  dangerMuted: 'rgba(255, 133, 119, 0.14)',
 
   // Overlays
-  overlayScrim: 'rgba(6, 6, 7, 0.72)',
-  overlaySoft: 'rgba(10, 10, 11, 0.4)',
-  sheetHandle: '#3A3A3E',
+  overlayScrim: 'rgba(8, 5, 4, 0.74)',
+  overlaySoft: 'rgba(12, 10, 8, 0.4)',
+  sheetHandle: '#6B6358',
 
-  // Avatar gradient pairs (deterministic, picked by user id) — muted tonal
-  // family, not a rainbow. Each is a near-neutral with a whisper of hue so
-  // people stay visually distinct without competing with the flame accent.
+  // Avatar gradient pairs (deterministic, picked by user id) — warm tonal
+  // family so people stay distinct without competing with the red accent.
   avatarGradients: [
-    ['#3A3F47', '#15161A'],
-    ['#463930', '#17120F'],
-    ['#37402F', '#121510'],
-    ['#3E2F3B', '#141013'],
-    ['#2D3444', '#101219'],
-    ['#453329', '#17110D'],
-    ['#2B3E3B', '#0E1614'],
-    ['#3B3B3F', '#141416'],
+    ['#4A3F36', '#1A1512'],
+    ['#54382B', '#1B120D'],
+    ['#3F4530', '#151810'],
+    ['#4A303A', '#180F13'],
+    ['#3A3F4A', '#12141A'],
+    ['#553A2A', '#1A110B'],
+    ['#33453F', '#0F1613'],
+    ['#463F38', '#171412'],
   ] as const,
 } as const;
 

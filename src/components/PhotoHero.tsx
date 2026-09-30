@@ -46,7 +46,7 @@ export function PhotoHero({ seed, name, photoUri, height, borderRadius = radius.
         </LinearGradient>
       )}
       <LinearGradient
-        colors={['rgba(10,10,11,0)', 'rgba(10,10,11,0.75)']}
+        colors={['rgba(12,10,8,0)', 'rgba(12,10,8,0.75)']}
         style={StyleSheet.absoluteFill}
         pointerEvents="none"
       />

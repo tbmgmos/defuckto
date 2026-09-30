@@ -23,7 +23,7 @@ export function DiscoveryCard({ user, unlockedFactsCount, sharedInterests, spark
     <View style={styles.container}>
       <PhotoHero seed={user.photoSeed} name={user.name} height={420}>
         <View style={styles.nameRow}>
-          <Text style={styles.name}>{user.name.toUpperCase()}</Text>
+          <Text style={styles.name}>{user.name}</Text>
           <UserBadges user={user} size={20} />
         </View>
         <Text style={styles.meta}>

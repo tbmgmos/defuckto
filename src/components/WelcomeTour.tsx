@@ -109,7 +109,7 @@ function LegendItem({ icon, label }: { icon: IconName; label: string }) {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: 'rgba(6, 6, 7, 0.94)',
+    backgroundColor: 'rgba(8, 5, 4, 0.94)',
     paddingHorizontal: spacing.lg,
     justifyContent: 'space-between',
   },

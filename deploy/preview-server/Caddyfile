@@ -1,0 +1,11 @@
+{$PREVIEW_DOMAIN} {
+	root * /srv/defuckto/builds
+	file_server browse
+	encode gzip
+
+	# Testers hit this over the open internet, so gate it with basic auth.
+	# Generate the hash with: caddy hash-password
+	basic_auth {
+		testers {$TESTERS_PASSWORD_HASH}
+	}
+}

@@ -29,6 +29,7 @@ export function TopPlacementSheet({ visible, alreadyInTop, price, hours, onClose
       </Text>
       <Button
         label={loading ? 'Оформляем…' : `${cta} за ${price}`}
+        variant="accent"
         onPress={onConfirm}
         size="lg"
         fullWidth

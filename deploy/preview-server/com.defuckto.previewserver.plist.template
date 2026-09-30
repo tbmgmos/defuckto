@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>Label</key>
+	<string>com.defuckto.previewserver</string>
+	<key>ProgramArguments</key>
+	<array>
+		<string>/opt/homebrew/bin/caddy</string>
+		<string>run</string>
+		<string>--config</string>
+		<string>/srv/defuckto/Caddyfile</string>
+		<string>--adapter</string>
+		<string>caddyfile</string>
+	</array>
+	<key>RunAtLoad</key>
+	<true/>
+	<key>KeepAlive</key>
+	<true/>
+	<key>StandardOutPath</key>
+	<string>/srv/defuckto/logs/caddy.out.log</string>
+	<key>StandardErrorPath</key>
+	<string>/srv/defuckto/logs/caddy.err.log</string>
+	<key>EnvironmentVariables</key>
+	<dict>
+		<key>PREVIEW_DOMAIN</key>
+		<string>preview.defuckto.example</string>
+		<key>TESTERS_PASSWORD_HASH</key>
+		<string>REPLACE_WITH_HASH_FROM_CADDY_HASH-PASSWORD</string>
+	</dict>
+</dict>
+</plist>

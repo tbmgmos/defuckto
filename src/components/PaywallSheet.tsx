@@ -41,6 +41,7 @@ export function PaywallSheet({ visible, onClose, onActivate, loading, alreadyPre
       ) : (
         <Button
           label={loading ? 'Активируем…' : 'Оформить (демо-режим)'}
+        variant="accent"
           onPress={onActivate}
           size="lg"
           fullWidth

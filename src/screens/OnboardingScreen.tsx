@@ -81,7 +81,7 @@ export function OnboardingScreen({ navigation }: Props) {
   return (
     <View style={styles.root}>
       <LinearGradient colors={slide.gradient} start={{ x: 0.1, y: 0 }} end={{ x: 0.9, y: 1 }} style={StyleSheet.absoluteFill} />
-      <LinearGradient colors={['rgba(10,10,11,0.15)', 'rgba(10,10,11,0.9)']} style={StyleSheet.absoluteFill} />
+      <LinearGradient colors={['rgba(12,10,8,0.15)', 'rgba(12,10,8,0.9)']} style={StyleSheet.absoluteFill} />
       <SafeAreaView style={styles.safe}>
         <View style={styles.dotsRow}>
           {SLIDES.map((_, i) => (

@@ -70,7 +70,7 @@ export function PhotoCarousel({ name, photos, unlockedIds, height, onUnlock, unl
                                 'Открываем…'
                               ) : (
                                 <>
-                                  Открыть за {price} <CoinGlyph size={13} color={colors.textInverse} />
+                                  Открыть за {price} <CoinGlyph size={13} color={colors.onAccent} />
                                 </>
                               )}
                             </Text>
@@ -104,7 +104,7 @@ export function PhotoCarousel({ name, photos, unlockedIds, height, onUnlock, unl
 const styles = StyleSheet.create({
   lockOverlay: {
     ...StyleSheet.absoluteFill,
-    backgroundColor: 'rgba(6,6,7,0.55)',
+    backgroundColor: 'rgba(8,5,4,0.55)',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -128,7 +128,7 @@ const styles = StyleSheet.create({
   },
   unlockButtonText: {
     ...typography.bodyMedium,
-    color: colors.textInverse,
+    color: colors.onAccent,
   },
   dots: {
     position: 'absolute',

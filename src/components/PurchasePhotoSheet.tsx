@@ -25,6 +25,7 @@ export function PurchasePhotoSheet({ visible, photo, onClose, onConfirm, loading
       </Text>
       <Button
         label={loading ? 'Открываем…' : `Открыть за ${price}`}
+        variant="accent"
         onPress={onConfirm}
         size="lg"
         fullWidth

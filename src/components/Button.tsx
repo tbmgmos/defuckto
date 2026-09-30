@@ -3,7 +3,7 @@ import { Animated, Pressable, StyleSheet, Text, View, ViewStyle } from 'react-na
 import { colors, radius, spacing, typography } from '../theme';
 import { haptics } from '../utils/haptics';
 
-type Variant = 'primary' | 'secondary' | 'ghost' | 'danger';
+type Variant = 'primary' | 'accent' | 'secondary' | 'ghost' | 'danger';
 type Size = 'md' | 'lg';
 
 interface ButtonProps {
@@ -86,8 +86,13 @@ function stylesFor(variant: Variant, size: Size) {
   switch (variant) {
     case 'primary':
       return {
-        container: { ...base, backgroundColor: colors.accent },
+        container: { ...base, backgroundColor: colors.textPrimary },
         label: { ...typography.bodyMedium, color: colors.textInverse },
+      };
+    case 'accent':
+      return {
+        container: { ...base, backgroundColor: colors.accent },
+        label: { ...typography.bodyMedium, color: colors.onAccent },
       };
     case 'secondary':
       return {

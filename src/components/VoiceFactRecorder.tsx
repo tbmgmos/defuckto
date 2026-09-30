@@ -86,7 +86,7 @@ export function VoiceFactRecorder({ onChange }: VoiceFactRecorderProps) {
         accessibilityRole="button"
         accessibilityLabel={recorderState.isRecording ? 'Остановить запись' : 'Начать запись'}
       >
-        <Ionicons name={recorderState.isRecording ? 'stop' : 'mic'} size={20} color={colors.textInverse} />
+        <Ionicons name={recorderState.isRecording ? 'stop' : 'mic'} size={20} color={colors.onAccent} />
       </Pressable>
       <Text style={styles.hint}>
         {recorderState.isRecording

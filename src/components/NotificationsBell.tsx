@@ -92,7 +92,7 @@ const styles = StyleSheet.create({
   badgeText: {
     fontSize: 10,
     fontWeight: '800',
-    color: colors.textInverse,
+    color: colors.onAccent,
   },
   empty: {
     ...typography.subhead,

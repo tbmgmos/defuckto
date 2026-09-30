@@ -212,6 +212,6 @@ const styles = StyleSheet.create({
   filterBadgeText: {
     fontSize: 10,
     fontWeight: '800',
-    color: colors.textInverse,
+    color: colors.onAccent,
   },
 });

@@ -35,7 +35,7 @@ export function VoiceFactPlayer({ uri, durationSec }: VoiceFactPlayerProps) {
   return (
     <Pressable onPress={toggle} style={styles.row} accessibilityRole="button" accessibilityLabel={status.playing ? 'Пауза' : 'Слушать голосовой факт'}>
       <View style={styles.playButton}>
-        <Ionicons name={status.playing ? 'pause' : 'play'} size={16} color={colors.textInverse} />
+        <Ionicons name={status.playing ? 'pause' : 'play'} size={16} color={colors.onAccent} />
       </View>
       <View style={styles.waveTrack}>
         <View style={[styles.waveFill, { width: `${progress * 100}%` }]} />

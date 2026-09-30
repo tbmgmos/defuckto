@@ -123,7 +123,7 @@ export function ChatScreen({ route, navigation }: Props) {
           accessibilityRole="button"
           accessibilityLabel="Отправить"
         >
-          <Ionicons name="arrow-up" size={20} color={colors.textInverse} />
+          <Ionicons name="arrow-up" size={20} color={colors.onAccent} />
         </Pressable>
       </View>
     </KeyboardAvoidingView>
@@ -208,7 +208,7 @@ const styles = StyleSheet.create({
     borderBottomLeftRadius: 4,
   },
   bubbleTextMine: {
-    color: colors.textInverse,
+    color: colors.onAccent,
   },
   bubbleTextTheirs: {
     color: colors.textPrimary,

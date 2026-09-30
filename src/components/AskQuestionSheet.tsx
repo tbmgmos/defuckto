@@ -51,6 +51,7 @@ export function AskQuestionSheet({ visible, onClose, onSend, loading, freeRemain
                 : `Отправить · ${QUESTION_PRICE}`
           }
           onPress={handleSend}
+          variant="accent"
           size="lg"
           fullWidth
           disabled={loading || !text.trim()}
