@@ -2,8 +2,10 @@ name: CI
 
 # Runs on every pull request and on every push to master. The job name
 # "check" is what a branch rule should require if the repo ever moves to a
-# plan that supports it. Publishing is not done from CI: the web build and
-# the Android APK are published from the Mac mini (deploy/preview-server/).
+# plan that supports it. This only builds the web export to catch export
+# failures early; deploy-web.yml is what actually publishes it to GitHub
+# Pages on master. The Android APK preview is still published from the Mac
+# mini (deploy/preview-server/).
 
 on:
   pull_request:
